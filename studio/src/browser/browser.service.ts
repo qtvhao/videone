@@ -1,14 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
 
 @Injectable()
-export class BrowserService {
+export class BrowserService implements OnModuleDestroy {
+  private browser: puppeteer.Browser;
+
+  private async initBrowser(): Promise<void> {
+    if (!this.browser) {
+      this.browser = await puppeteer.launch();
+    }
+  }
+
   async getPageContent(url: string): Promise<string> {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    await this.initBrowser();
+    const page = await this.browser.newPage();
     await page.goto(url);
     const content = await page.content();
-    await browser.close();
+    await page.close();
     return content;
+  }
+
+  async goto(url: string): Promise<puppeteer.Page> {
+    await this.initBrowser();
+    const page = await this.browser.newPage();
+    await page.goto(url);
+    return page;
+  }
+
+  async onModuleDestroy() {
+    if (this.browser) {
+      await this.browser.close();
+    }
   }
 }
