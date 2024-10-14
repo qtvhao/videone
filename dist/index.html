@@ -305,13 +305,13 @@
               if (status.startsWith('final reviewing')) {
                 let matcher = /final reviewing (\d+) out of (\d+) (\d+)\/(\d+)/;
                 let match = matcher.exec(message.status);
-                console.log(match, status);
+                // console.log(match, status);
                 if (match) {
                   let [_, id, total1, current, total] = match;
                   let final_reviewing_item = this.videoDetails[i].final_reviewing
                     .filter((item) => item.id === id)[0];
-                  console.log(final_reviewing_item);
-                  console.log(typeof final_reviewing_item);
+                  // console.log(final_reviewing_item);
+                  // console.log(typeof final_reviewing_item);
                   if (typeof final_reviewing_item === 'undefined') {
                     this.videoDetails[i].final_reviewing.push({
                       total: 0,
@@ -326,7 +326,7 @@
                       this.videoDetails[i].final_reviewing[j].total = total;
                       this.videoDetails[i].final_reviewing[j].current = current;
                       this.videoDetails[i].final_reviewing[j].visual = '✅'.repeat(current) + '⏳'.repeat(total - current);
-                      console.log('Final reviewing', this.videoDetails[i].final_reviewing[j]);
+                      // console.log('Final reviewing', this.videoDetails[i].final_reviewing[j]);
                       break;
                     }
                   }
@@ -345,7 +345,10 @@
                   if ('' === this.videoDetails[i][status]) {
                     this.videoDetails[i][status] = ['✅'];
                   } else {
-                    this.videoDetails[i][status] = this.videoDetails[i][status].concat(['✅']);
+                    console.log(this.videoDetails[i][status], status);
+                    if (this.steps.includes(status)) {
+                      this.videoDetails[i][status] = this.videoDetails[i][status].concat(['✅']);
+                    }
                   }
                 }
               }
@@ -376,6 +379,7 @@
 
             this.appendNotification("- Status: " + status);
             if (status === 'completed') {
+              console.log(data.message);
               this.appendNotification("- Prompt: " + prompt);
               this.appendNotification("- Job ID: " + job_id);
               this.appendNotification("- Video rendering job complete.");
