@@ -14,4 +14,14 @@ export class BrowserController {
   async getScreenshot(@Query('url') url: string): Promise<Uint8Array> {
     return this.browserService.getScreenshot(url);
   }
+
+  @Get('goto')
+  async gotoPage(@Query('url') url: string): Promise<void> {
+    this.browserService.gotoPage(url);
+  }
+
+  @Get('upload')
+  async uploadFile(@Query('url') url: string, @Query('waitForSelector') waitForSelector: string, @Query('file') fileUrl: string): Promise<void> {
+    await this.browserService.uploadFile(url, waitForSelector, fileUrl);
+  }
 }
