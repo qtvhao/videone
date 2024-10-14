@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Rendering Service</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .suggested-prompts {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .suggested-prompt {
+      cursor: pointer;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      display: inline-block;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+    }
+
+    .suggested-prompt:hover {
+      background-color: #f0f0f0;
+    }
+  </style>
+  <style>
+    .link-disabled {
+      cursor: not-allowed;
+      background-color: #f0f0f0;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="app">
+    <h1>
+      Video Rendering Service
+    </h1>
+
+    <!-- Form to select visual prompt and provide a custom prompt -->
+    <form @submit.prevent="submitForm">
+      <div v-show="secret_key && secret_key !== 'please-contact-admin-to-get-one'">
+        <label for="prompt">
+          Nhập prompt:
+        </label>
+        <small>
+          Cung cấp prompt tùy chỉnh mô tả nội dung bạn muốn tạo.
+        </small>
+        <textarea id="prompt" v-model="customPrompt" placeholder="Nhập prompt tùy chỉnh" required></textarea>
+        <!-- Suggested Prompts Section -->
+        <label for="suggested_prompt">
+          Suggested Prompts:
+        </label>
+        <small>
+          Hoặc chọn một trong các gợi ý sau:
+        </small>
+        <ul class="suggested-prompts">
+          <li v-for="suggestedPrompt in suggestedPrompts" :key="suggestedPrompt"
+            @click="submitCustomPrompt(suggestedPrompt)" class="suggested-prompt"
+            :class="{ 'link-disabled': socketIsConnected === false }">
+            {{ suggestedPrompt }}
+          </li>
+        </ul>
+      </div>
+      <!-- New input field for secret_key -->
+      <label for="secret_key">
+        <!-- Enter Secret Key: -->
+        Nhập Secret Key:
+      </label>
+      <small>
+        Secret key là bắt buộc để xác thực. Liên hệ admin nếu bạn chưa có.
+      </small>
+      <input type="text" id="secret_key" v-model="secret_key" placeholder="Liên hệ admin để lấy Secret Key" required>
+
+      <button type="submit"
+        :class="{ 'btn-disabled': (socketIsConnected === false || !secret_key || secret_key === 'please-contact-admin-to-get-one') }">
+        Submit
+      </button>
+    </form>
+    <table v-show="videoDetails.length > 0">
+      <tr>
+        <th>Prompt</th>
+        <th v-for="step in steps" :key="step">{{ step }}</th>
+        <th>
+          Final Reviewing
+        </th>
+        <th>
+          Exporting
+        </th>
+      </tr>
+      <tr v-for="videoDetail in videoDetails" :key="videoDetail.prompt">
+        <td>{{ videoDetail.prompt }}</td>
+        <td v-for="step in steps" :key="step">{{ videoDetail[step] }}</td>
+        <td>
+          <div v-for="item in videoDetail.final_reviewing" :key="item.id">
+            {{ item.visual }}
+          </div>
+        </td>
+        <td>
+          {{ videoDetail.exporting }}
+        </td>
+      </tr>
+    </table>
+
+    <!-- Notification list -->
+    <ul class="notifications">
+      <li class="notification">
+        Trong khi chờ video được tạo, bạn có thể gửi prompt khác và quá trình tạo video sẽ được thực hiện song song.
+        <!-- While waiting for the video to render, you can submit another prompt and it will be rendered concurrently. -->
+      </li>
+      <li v-for="notification in notifications" :key="notification.id" class="notification">
+        <span>{{ notification.message }}</span>
+
+        <!-- Conditionally display video player if video_url exists in the notification -->
+        <video v-if="notification.video_url" controls width="100%" style="margin-top: 1rem;"
+          onerror="this.style.display='none'">
+          <source :src="notification.video_url" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <a v-if="notification.video_url" :href="notification.video_url" target="_blank">
+          <small>
+            Click to download the video
+          </small>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.5.4/vue.global.prod.min.js"
+    integrity="sha512-daXDxACuUMgdw50LypY68sSM7Qksm/pJ207U8xLSv30B9J9YhU3wvHRZotKhBppjPgmatS6Cf2nkNxaImiHNyg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.13/dayjs.min.js"
+    integrity="sha512-FwNWaxyfy2XlEINoSnZh1JQ5TRRtGow0D6XcmAWmYCRgvqOUTnzCxPc9uF35u5ZEpirk1uhlPVA19tflhvnW1g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.13/plugin/duration.min.js"
+    integrity="sha512-t0b2NyBypSms8nA81pldWo0mXbfMotsdYgvs4awmbi/GU/25YBNLnXj+I9DAMV7WGZ8+z8wtRolX7zSF2LN8UQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.13/plugin/relativeTime.min.js"
+    integrity="sha512-MVzDPmm7QZ8PhEiqJXKz/zw2HJuv61waxb8XXuZMMs9b+an3LoqOqhOEt5Nq3LY1e4Ipbbd/e+AWgERdHlVgaA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script>
+    dayjs.extend(window.dayjs_plugin_duration);
+    dayjs.extend(window.dayjs_plugin_relativeTime);
+
+    let submittedAt = new Date();
+    let baseUrl = 'https://http-distributor-api-apis-production-80.schnworks.com/';
+    const app = Vue.createApp({
+      data() {
+        return {
+          suggestedPrompts: [
+            'Xây dựng bài giảng về sales pipeline. Đối tượng là người đọc không chuyên về lĩnh vực kinh doanh và tiếp thị',
+            'Hãy xây dựng bài giảng về Blockchain. Đối tượng là người đọc không chuyên về lĩnh vực công nghệ',
+            // 'Giới thiệu tổng quan về công nghệ Blockchain',
+            'Hãy giới thiệu thuật toán Obelisk Consensus trong Blockchain. Đối tượng là người đọc không chuyên về lĩnh vực công nghệ (Blockchain)',
+            'Các bước để trở thành một indie hacker',
+            'Thuyết trình về những ứng dụng của AI trong cuộc sống',
+            'Giới thiệu về lịch sử nền văn minh Hy Lạp',
+          ],
+          notifications: [], // Store notifications reactively
+          count: 0,
+          socketIsConnected: false,
+          socket: null,
+          steps: [
+            // "writing_down_ideas",
+            // "planning_episodes",
+            // "defining_target_audience",
+            "step_1",
+            "step_2",
+            "step_3",
+            "step_3.1",
+            "step_3.2",
+            "step_4",
+            "step_5.1",
+            "step_5.2",
+            "step_6",
+            "step_7",
+            "step_7.2. importing media",
+            "step_8",
+            // "final reviewing",
+            // "exporting",
+          ],
+          videoDetails: [],
+          baseUrl,
+          secret_key: 'please-contact-admin-to-get-one', // Default secret key
+          selectedVisualPrompt: 'Entrepreneurship', // Store selected visual prompt
+          customPrompt: 'Hãy xây dựng bài giảng về indie hacker', // Store user input for prompt
+          video_url: '', // Store the video URL
+          visualPrompts: [
+            'Entrepreneurship',
+            'Geometry',
+            'Mathematics',
+            'Science',
+            'History',
+            'Art'
+          ] // Predefined visual prompts
+        };
+      },
+      methods: {
+        submitCustomPrompt(suggestedPrompt) {
+          this.customPrompt = suggestedPrompt;
+          this.submitForm();
+        },
+        appendNotification(message, video_url = null) {
+          // const start = dayjs('2023-10-01');
+          // const end = dayjs('2023-10-05');
+          let start = dayjs(submittedAt);
+          let end = dayjs(new Date());
+          const humanReadableDiff = dayjs.duration(end.diff(start)).humanize();
+          // let notifiedAt = new Date();
+          // let timeDiff = notifiedAt - submittedAt;
+          this.notifications.unshift({
+            // to publish /static/ folder on free public static server
+            // You can use Cloudflare Pages, Vercel, Netlify, or GitHub Pages
+            id: this.notifications.length + 1,
+            message: '[' + humanReadableDiff + '] ' + message,
+            video_url,
+          });
+        },
+        sendJobCompletion() {
+          const postData = {
+            'job_id': '12345',
+            'status': 'complete',
+            'video_url': 'https://example.com/video.m3u8',
+            'thumbnail_url': 'https://example.com/thumbnail.jpg',
+            'message': 'Video rendering job complete',
+            'duration': 60,
+            'resolution': '1080p',
+            'format': 'mp4',
+            'secret_key': this.secret_key
+          };
+
+          setTimeout(() => {
+            this.sendPostRequest(this.baseUrl, postData);
+          }, 200);
+        },
+        sendPostRequest(url, data) {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', url, true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+          xhr.send(JSON.stringify(data));
+
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              console.log(xhr.responseText);
+            }
+          };
+        },
+        submitForm() {
+          submittedAt = new Date();
+
+          // Save the secret_key to localStorage
+          localStorage.setItem('secret_key', this.secret_key);
+
+          // Send subscribe message with user-entered secret_key
+          this.socket.emit('subscribe', { secret_key: this.secret_key });
+
+          const postData = {
+            // 'visual_prompt': this.selectedVisualPrompt,
+            'prompt': this.customPrompt,
+            'secret_key': this.secret_key
+          };
+
+          this.sendPostRequest(this.baseUrl.replace(/\/$/, '') + '/api/v1/render-video', postData);
+
+          this.customPrompt = '';
+        },
+        updateGanttChart(message) {
+          let {
+            status,
+          } = message;
+          // console.log(message);
+          if (this.videoDetails.filter((item) => item.prompt === message.prompt).length === 0) {
+            this.videoDetails.push({
+              prompt: message.prompt,
+              ...this.$data.steps.reduce((acc, step) => {
+                acc[step] = '';
+                return acc;
+              }, {}),
+              final_reviewing: [],
+              exporting: '',
+            });
+          }
+          //
+          for (let i = 0; i < this.videoDetails.length; i++) {
+            if (this.videoDetails[i].prompt === message.prompt) {
+              if (status.startsWith('final reviewing')) {
+                let matcher = /final reviewing (\d+) out of (\d+) (\d+)\/(\d+)/;
+                let match = matcher.exec(message.status);
+                console.log(match, status);
+                if (match) {
+                  let [_, id, total1, current, total] = match;
+                  let final_reviewing_item = this.videoDetails[i].final_reviewing
+                    .filter((item) => item.id === id)[0];
+                  console.log(final_reviewing_item);
+                  console.log(typeof final_reviewing_item);
+                  if (typeof final_reviewing_item === 'undefined') {
+                    this.videoDetails[i].final_reviewing.push({
+                      total: 0,
+                      current: 0,
+                      id: id,
+                      visual: '',
+                    });
+                  }
+                  //
+                  for (let j = 0; j < this.videoDetails[i].final_reviewing.length; j++) {
+                    if (this.videoDetails[i].final_reviewing[j].id === id) {
+                      this.videoDetails[i].final_reviewing[j].total = total;
+                      this.videoDetails[i].final_reviewing[j].current = current;
+                      this.videoDetails[i].final_reviewing[j].visual = '✅'.repeat(current) + '⏳'.repeat(total - current);
+                      console.log('Final reviewing', this.videoDetails[i].final_reviewing[j]);
+                      break;
+                    }
+                  }
+                }
+              } else {
+                if (status.startsWith('exporting')) {
+                  // exporting 2/5
+                  let matcher = /exporting (\d+)\/(\d+)/;
+                  let match = matcher.exec(message.status);
+                  console.log(match, status);
+                  if (match) {
+                    let [_, current, total] = match;
+                    this.videoDetails[i].exporting = '✅'.repeat(current) + '⏳'.repeat(total - current);
+                  }
+                } else {
+                  if ('' === this.videoDetails[i][status]) {
+                    this.videoDetails[i][status] = '✅';
+                  } else {
+                    this.videoDetails[i][status] = this.videoDetails[i][status] + '✅';
+                  }
+                }
+              }
+              break;
+            }
+          }
+        },
+        setupWebSocket() {
+          this.socket = io(this.baseUrl);
+
+          // Send subscribe message with user-entered secret_key
+          this.socket.emit('subscribe', { secret_key: this.secret_key });
+
+          this.socket.on('subscription_success', (data) => {
+            this.appendNotification("Subscription Success: " + data.message);
+          });
+
+          this.socket.on('subscription_error', (data) => {
+            this.appendNotification("Subscription Error: " + data.message);
+          });
+
+          this.socket.on('job_complete', (data) => {
+            let {
+              prompt: prompt,
+              message, job_id, video_url, thumbnail_url, duration, resolution, format, secret_key, status
+            } = data.message;
+            this.updateGanttChart(data.message);
+
+            this.appendNotification("- Status: " + status);
+            if (status === 'completed') {
+              this.appendNotification("- Prompt: " + prompt);
+              this.appendNotification("- Job ID: " + job_id);
+              this.appendNotification("- Video rendering job complete.");
+              this.appendNotification("- Secret Key: " + secret_key);
+              this.appendNotification("- Thumbnail URL: " + thumbnail_url);
+              this.appendNotification("- Duration: " + duration);
+              this.appendNotification("- Resolution: " + resolution);
+              this.appendNotification("- Format: " + format);
+
+              if (video_url) {
+                this.appendNotification("- Video is ready to play!", baseUrl + video_url.replace(/^\/+/, ''));
+              }
+            } else {
+              if (status === 'partial_completed') {
+                if (video_url) {
+                  this.appendNotification("- Bạn có thể xem trước một phần video, toàn bộ video sẽ được cập nhật sau!", baseUrl + video_url.replace(/^\/+/, ''));
+                }
+              }
+            }
+          });
+
+          this.socket.on('notification', (data) => {
+            this.socketIsConnected = true;
+            // if (this.count === 0) {
+            // const postData = {
+            //   'visual_prompt': this.selectedVisualPrompt || 'Mathematics',
+            //   'prompt': this.customPrompt,
+            //   'secret_key': this.secret_key
+            // };
+
+            // this.sendPostRequest(this.baseUrl.replace(/\/$/, '') + '/api/v1/render-video', postData);
+
+            // if (this.baseUrl.startsWith('http:')) {
+            //   this.sendJobCompletion();
+            // }
+            // }
+            this.count++;
+            this.appendNotification(data.message);
+          });
+        }
+      },
+      mounted() {
+        const storedSecretKey = localStorage.getItem('secret_key');
+        if (storedSecretKey) {
+          this.secret_key = storedSecretKey;
+        }
+
+        let ct = this;
+        setTimeout(() => {
+          ct.setupWebSocket();
+        }, 3e3);
+      }
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+
+</html>
