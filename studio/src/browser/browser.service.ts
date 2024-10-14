@@ -1,5 +1,7 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
+import * as os from 'os';
+import { spawn } from 'child_process';
 
 @Injectable()
 export class BrowserService implements OnModuleDestroy {
@@ -7,7 +9,35 @@ export class BrowserService implements OnModuleDestroy {
 
   private async initBrowser(): Promise<void> {
     if (!this.browser) {
-      this.browser = await puppeteer.launch();
+      this.spawnChrome();
+      this.browser = await puppeteer.connect({
+        browserURL: 'http://localhost:9222' // Assumes Chrome is running with remote debugging enabled
+      });
+    }
+  }
+
+  private spawnChrome(): void {
+    const platform = os.platform();
+    if (platform === 'darwin') {
+      spawn(
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        ['--remote-debugging-port=9222'],
+        { detached: true }
+      );
+    } else if (platform === 'win32') {
+      spawn(
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        ['--remote-debugging-port=9222'],
+        { detached: true }
+      );
+    } else if (platform === 'linux') {
+      spawn(
+        '/usr/bin/google-chrome',
+        ['--remote-debugging-port=9222'],
+        { detached: true }
+      );
+    } else {
+      throw new Error(`Unsupported platform: ${platform}`);
     }
   }
 
@@ -16,20 +46,12 @@ export class BrowserService implements OnModuleDestroy {
     const page = await this.browser.newPage();
     await page.goto(url);
     const content = await page.content();
-    await page.close();
     return content;
   }
 
-  async goto(url: string): Promise<puppeteer.Page> {
-    await this.initBrowser();
-    const page = await this.browser.newPage();
-    await page.goto(url);
-    return page;
-  }
-
-  async onModuleDestroy() {
+  onModuleDestroy() {
     if (this.browser) {
-      await this.browser.close();
+      this.browser.close();
     }
   }
 }
