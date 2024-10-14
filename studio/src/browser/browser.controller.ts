@@ -9,4 +9,9 @@ export class BrowserController {
   async getPageContent(@Query('url') url: string): Promise<string> {
     return this.browserService.getPageContent(url);
   }
+
+  @Get('screenshot')
+  async getScreenshot(@Query('url') url: string): Promise<Uint8Array> {
+    return this.browserService.getScreenshot(url);
+  }
 }

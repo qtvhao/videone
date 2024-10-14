@@ -10,8 +10,9 @@ export class BrowserService implements OnModuleDestroy {
   private async initBrowser(): Promise<void> {
     if (!this.browser) {
       this.spawnChrome();
+      await this.waitForChrome();
       this.browser = await puppeteer.connect({
-        browserURL: 'http://localhost:9222' // Assumes Chrome is running with remote debugging enabled
+        browserURL: 'http://localhost:9222'
       });
     }
   }
@@ -24,21 +25,30 @@ export class BrowserService implements OnModuleDestroy {
         ['--remote-debugging-port=9222'],
         { detached: true }
       );
-    } else if (platform === 'win32') {
-      spawn(
-        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-        ['--remote-debugging-port=9222'],
-        { detached: true }
-      );
-    } else if (platform === 'linux') {
-      spawn(
-        '/usr/bin/google-chrome',
-        ['--remote-debugging-port=9222'],
-        { detached: true }
-      );
-    } else {
-      throw new Error(`Unsupported platform: ${platform}`);
     }
+  }
+
+  private async waitForChrome(): Promise<void> {
+    const url = 'http://localhost:9222/json/version';
+    while (true) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          break;
+        }
+      } catch (error) {
+        // Ignore errors and retry
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+
+  async getScreenshot(url: string): Promise<Uint8Array> {
+    await this.initBrowser();
+    const page = await this.browser.newPage();
+    await page.goto(url);
+    const screenshot = await page.screenshot();
+    return screenshot;
   }
 
   async getPageContent(url: string): Promise<string> {
