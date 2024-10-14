@@ -26,6 +26,13 @@
     .suggested-prompt:hover {
       background-color: #f0f0f0;
     }
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 280px;
+      display: table-cell;
+    }
   </style>
   <style>
     .link-disabled {
@@ -95,7 +102,12 @@
       </tr>
       <tr v-for="videoDetail in videoDetails" :key="videoDetail.prompt">
         <td>{{ videoDetail.prompt }}</td>
-        <td v-for="step in steps" :key="step">{{ videoDetail[step] }}</td>
+        <td v-for="step in steps" :key="step">
+          <!-- {{ videoDetail[step] }} -->
+          <div v-for="item in videoDetail[step]" :key="item.id">
+            {{ item }}
+          </div>
+        </td>
         <td>
           <div v-for="item in videoDetail.final_reviewing" :key="item.id">
             {{ item.visual }}
@@ -331,9 +343,9 @@
                   }
                 } else {
                   if ('' === this.videoDetails[i][status]) {
-                    this.videoDetails[i][status] = '✅';
+                    this.videoDetails[i][status] = ['✅'];
                   } else {
-                    this.videoDetails[i][status] = this.videoDetails[i][status] + '✅';
+                    this.videoDetails[i][status] = this.videoDetails[i][status].concat(['✅']);
                   }
                 }
               }
