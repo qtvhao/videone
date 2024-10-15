@@ -63,8 +63,11 @@ export class BrowserService implements OnModuleDestroy {
     return pages[0];
   }
 
-  async uploadFile(url: string, waitForSelector: string, fileUrl: string): Promise<string> {
+  async uploadFile(url: string, pathname, waitForSelector: string, fileUrl: string): Promise<string> {
     const page = await this.gotoPage(url);
+    const pageUrl = page.url();
+    console.log('Current URL:', pageUrl);
+    await this.gotoPage(pageUrl + pathname);
     await page.waitForSelector(waitForSelector);
     const input = await page.$(waitForSelector) as puppeteer.ElementHandle<HTMLInputElement>;
     const file = await this.fetchFileUrlAsLocalFile(fileUrl);

@@ -2,6 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BrowserController } from './browser.controller';
 import { BrowserService } from './browser.service';
 import { BrowserModule } from './browser.module';
+import {
+  uploadFileFixtures,
+  getPageContentFixtures,
+  getScreenshotFixtures,
+  gotoPageFixtures,
+} from './browser.controller.fixtures';
 
 jest.setTimeout(30000); // 30 seconds
 
@@ -12,25 +18,31 @@ describe('BrowserController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [],
-      imports: [
-        BrowserModule,
-      ],
+      imports: [BrowserModule],
     }).compile();
 
     controller = module.get<BrowserController>(BrowserController);
     browserService = module.get<BrowserService>(BrowserService);
   });
 
-  it('should call uploadFile with correct parameters', async () => {
-    const url = 'https://studio.youtube.com/';
-    const waitForSelector = 'body';
-    const fileUrl = 'http://example.com/file.txt';
-
-    const result = await controller.uploadFile(url, waitForSelector, fileUrl);
+  it.each(
+    uploadFileFixtures.map((fixture) => [
+      fixture.url,
+      fixture.urlPath,
+      fixture.waitForSelector,
+      fixture.fileUrl,
+    ]),
+  )('should return success status after uploading file', async (  url, urlPath, waitForSelector, fileUrl) => {
+    const result = await controller.uploadFile(
+      url,
+      urlPath,
+      waitForSelector,
+      fileUrl,
+    );
 
     expect(result).toEqual({
-      "status": "success",
-      "upload": "http://example.com/uploaded_file.txt2"
+      status: 'success',
+      upload: 'http://example.com/uploaded_file.txt2',
     });
   });
 
@@ -42,7 +54,12 @@ describe('BrowserController', () => {
 
     (browserService.uploadFile as jest.Mock).mockResolvedValue(uploadUrl);
 
-    const result = await controller.uploadFile(url, waitForSelector, fileUrl);
+    const result = await controller.uploadFile(
+      url,
+      '',
+      waitForSelector,
+      fileUrl,
+    );
 
     expect(result).toEqual({
       upload: uploadUrl,
@@ -51,7 +68,7 @@ describe('BrowserController', () => {
   });
 
   it('should call getPageContent with correct parameters', async () => {
-    const url = 'http://example.com';
+    const { url } = getPageContentFixtures[0];
 
     await controller.getPageContent(url);
 
@@ -67,10 +84,64 @@ describe('BrowserController', () => {
   });
 
   it('should call gotoPage with correct parameters', async () => {
-    const url = 'http://example.com';
+    const { url } = gotoPageFixtures[0];
 
     await controller.gotoPage(url);
 
     expect(browserService.gotoPage).toHaveBeenCalledWith(url);
+  });
+
+  // Additional tests using fixtures
+  it('should call uploadFile with different fixture parameters', async () => {
+    for (const fixture of uploadFileFixtures) {
+      const { url, urlPath, waitForSelector, fileUrl, expectedUploadUrl } =
+        fixture;
+
+      (browserService.uploadFile as jest.Mock).mockResolvedValue(
+        expectedUploadUrl,
+      );
+
+      const result = await controller.uploadFile(
+        url,
+        urlPath,
+        waitForSelector,
+        fileUrl,
+      );
+
+      expect(result).toEqual({
+        upload: expectedUploadUrl,
+        status: 'success',
+      });
+    }
+  });
+
+  it('should call getPageContent with different fixture parameters', async () => {
+    for (const fixture of getPageContentFixtures) {
+      const { url } = fixture;
+
+      await controller.getPageContent(url);
+
+      expect(browserService.getPageContent).toHaveBeenCalledWith(url);
+    }
+  });
+
+  it('should call getScreenshot with different fixture parameters', async () => {
+    for (const fixture of getScreenshotFixtures) {
+      const { url } = fixture;
+
+      await controller.getScreenshot(url);
+
+      expect(browserService.getScreenshot).toHaveBeenCalledWith(url);
+    }
+  });
+
+  it('should call gotoPage with different fixture parameters', async () => {
+    for (const fixture of gotoPageFixtures) {
+      const { url } = fixture;
+
+      await controller.gotoPage(url);
+
+      expect(browserService.gotoPage).toHaveBeenCalledWith(url);
+    }
   });
 });
