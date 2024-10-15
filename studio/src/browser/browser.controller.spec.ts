@@ -9,7 +9,7 @@ import {
   gotoPageFixtures,
 } from './browser.controller.fixtures';
 
-jest.setTimeout(30000); // 30 seconds
+jest.setTimeout(180_000); // 30 seconds
 
 describe('BrowserController', () => {
   let controller: BrowserController;
@@ -97,15 +97,35 @@ describe('BrowserController', () => {
     return [url, urlPath, waitForSelector, fileUrl];
   }))( 'should return success status after uploadFile', async (url, urlPath, waitForSelector, fileUrl) => {
       const expectedUploadUrl = 'File uploaded';
-
-      const result = await controller.uploadFile(
-        { url, urlPath, waitForSelector, file: fileUrl },
-      );
-
-      expect(result).toEqual({
-        upload: expectedUploadUrl,
-        status: 'success',
+      const result = await controller.uploadFile({
+        url,
+        urlPath,
+        waitForSelector,
+        file: fileUrl,
       });
+
+      console.log('Result:', result);
+
+      while (true) {
+        const pageContent = await controller.getPageContent();
+        console.log('Page content:', pageContent);
+
+        await new Promise((resolve) => setTimeout(resolve, 8000));
+
+        if (pageContent.includes('Checks complete. No issues found.')) {
+          break;
+        }
+      }
+
+    let textContent = await controller.getTextContent(
+      'div',
+      'https://youtu.be/',
+    );
+    console.log('Text content:', textContent);
+    expect(result).toEqual({
+      upload: expectedUploadUrl,
+      status: 'success',
+    });
   });
 
   it('should call getPageContent with different fixture parameters', async () => {

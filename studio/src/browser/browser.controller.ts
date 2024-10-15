@@ -10,6 +10,11 @@ export class BrowserController {
     return this.browserService.getPageContent(url);
   }
 
+  @Get('getTextContent')
+  async getTextContent(@Query('selector') selector: string, @Query('find') find: string): Promise<string> {
+    return this.browserService.getTextContent(selector, find);
+  }
+
   @Get('screenshot')
   async getScreenshot(@Query('url') url: string): Promise<Uint8Array> {
     return this.browserService.getScreenshot(url);

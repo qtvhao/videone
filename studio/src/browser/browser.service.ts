@@ -35,7 +35,7 @@ export class BrowserService implements OnModuleDestroy {
         console.log('Chrome is ready.');
         break;
       }
-      console.log('Waiting for Chrome to be ready...');
+      // console.log('Waiting for Chrome to be ready...');
       await this.delay(retryInterval);
     }
   }
@@ -97,6 +97,17 @@ export class BrowserService implements OnModuleDestroy {
     return screenshot;
   }
 
+  async getTextContent(selector: string, find: string): Promise<string> {
+    const page = await this.getFirstPage();
+    let elements = await page.$$(selector);
+    for (let element of elements) {
+      const textContent = await page.evaluate(element => element.textContent, element);
+      if (textContent.indexOf(find) !== -1) {
+        return textContent;
+      }
+    }
+  }
+
   async getPageContent(url: string = ''): Promise<string> {
     let page = null;
     if (url === '') {
@@ -104,7 +115,7 @@ export class BrowserService implements OnModuleDestroy {
     }else{
       page = await this.gotoPage(url);
     }
-    const content = await page.content();
+    const content = await page.evaluate(() => document.documentElement.innerText);
     return content;
   }
 
