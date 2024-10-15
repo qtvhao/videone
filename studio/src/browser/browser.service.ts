@@ -51,12 +51,15 @@ export class BrowserService implements OnModuleDestroy {
     const pages = await this.browser.pages();
     return pages[0];
   }
-  async uploadFile(url: string, waitForSelector: string, fileUrl: string): Promise<void> {
+  async uploadFile(url: string, waitForSelector: string, fileUrl: string): Promise<string> {
     const page = await this.gotoPage(url);
     await page.waitForSelector(waitForSelector);
     const input = await page.$(waitForSelector) as puppeteer.ElementHandle<HTMLInputElement>;
+    throw new Error('Method not implemented.');
     const file = await this.fetchFileUrlAsLocalFile(fileUrl);
     await input.uploadFile(file);
+
+    return 'File uploaded';
   }
   async fetchFileUrlAsLocalFile(fileUrl: string): Promise<string> {
     const response = await fetch(fileUrl);

@@ -21,7 +21,12 @@ export class BrowserController {
   }
 
   @Get('upload')
-  async uploadFile(@Query('url') url: string, @Query('waitForSelector') waitForSelector: string, @Query('file') fileUrl: string): Promise<void> {
-    await this.browserService.uploadFile(url, waitForSelector, fileUrl);
+  async uploadFile(@Query('url') url: string, @Query('waitForSelector') waitForSelector: string, @Query('file') fileUrl: string): Promise<{ upload: string, status: string }> {
+    let uploadUrl = await this.browserService.uploadFile(url, waitForSelector, fileUrl);
+
+    return {
+      upload: uploadUrl,
+      status: 'success'
+    }
   }
 }
