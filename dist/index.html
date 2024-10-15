@@ -34,6 +34,7 @@
       max-width: 280px;
       display: table-cell;
     }
+
     button {
       cursor: pointer;
       background: #3498db;
@@ -112,7 +113,7 @@
         <tr v-for="video in videosInDatabase" :key="video.id">
           <td>{{ video.id }}</td>
           <td>
-            <a :href="baseUrl + video.video_url" target="_blank">
+            <a :href="video.video_url" target="_blank">
               {{ video.video_url }}
             </a>
           </td>
@@ -197,10 +198,42 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.13/plugin/relativeTime.min.js"
     integrity="sha512-MVzDPmm7QZ8PhEiqJXKz/zw2HJuv61waxb8XXuZMMs9b+an3LoqOqhOEt5Nq3LY1e4Ipbbd/e+AWgERdHlVgaA=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"
+    integrity="sha512-DdX/YwF5e41Ok+AI81HI8f5/5UsoxCVT9GKYZRIzpLxb8Twz4ZwPPX+jQMwMhNQ9b5+zDEefc+dcvQoPWGNZ3g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
   <script>
     dayjs.extend(window.dayjs_plugin_duration);
     dayjs.extend(window.dayjs_plugin_relativeTime);
+
+    axios.defaults.baseURL = 'http://localhost:3000';
+
+    const controller = {
+      async uploadFile({ url, urlPath, waitForSelector, file }) {
+        return await axios.post('/upload', {
+          url,
+          urlPath,
+          waitForSelector,
+          file,
+        });
+      },
+      async clickElement({ selector, text, times }) {
+        return await axios.post('/clickElement', {
+          selector,
+          text,
+          times,
+        });
+      },
+      async getTextContent(selector, url) {
+        return await axios.post('/getTextContent', {
+          selector,
+          url,
+        });
+      },
+      async getPageContent() {
+        return await axios.get('/content');
+      },
+    };
 
     let submittedAt = new Date();
     let baseUrl = 'https://http-distributor-api-apis-production-80.schnworks.com/';
@@ -340,7 +373,53 @@
         },
 
         async uploadVideo(id) {
-          
+          const video = await this.readItem(id);
+          console.log('Uploading video:', video);
+          let video_url = video.video_url;
+          const result = await controller.uploadFile({
+            url,
+            urlPath,
+            waitForSelector,
+            file: fileUrl,
+          });
+
+          console.log('Result:', result);
+
+          while (true) {
+            const pageContent = await controller.getPageContent();
+            console.log('Page content:', pageContent);
+
+            await new Promise((resolve) => setTimeout(resolve, 8000));
+
+            if (pageContent.includes('Checks complete. No issues found.')) {
+              break;
+            }
+          }
+
+          let textContent = await controller.getTextContent(
+            'div',
+            'https://youtu.be/',
+          );
+          // 
+          await controller.clickElement({
+            selector: '#next-button.ytcp-uploads-dialog',
+            text: '',
+            times: 3,
+          });
+          // 
+          await controller.clickElement({
+            selector: '#radioLabel',
+            text: 'Public',
+            times: 3,
+          });
+          // 
+          await new Promise((resolve) => setTimeout(resolve, 2_000));
+          await controller.clickElement({
+            selector: '#done-button.ytcp-uploads-dialog',
+            text: '',
+            times: 1,
+          });
+          console.log('Text content:', textContent);
         },
         async deleteVideo(id) {
           this.deleteItem(id);
@@ -562,20 +641,20 @@
               this.appendNotification("- Resolution: " + resolution);
               this.appendNotification("- Format: " + format);
 
-              // Add video data to IndexedDB
-              ct.addVideoToIndexedDB({
-                job_id,
-                video_url,
-                thumbnail_url,
-                duration,
-                resolution,
-                format,
-                secret_key,
-                status
-              });
-
               if (video_url) {
-                this.appendNotification("- Video is ready to play!", baseUrl + video_url.replace(/^\/+/, ''));
+                // Add video data to IndexedDB
+                let videoUrl = baseUrl + video_url.replace(/^\/+/, '');
+                ct.addVideoToIndexedDB({
+                  job_id,
+                  video_url: videoUrl,
+                  thumbnail_url,
+                  duration,
+                  resolution,
+                  format,
+                  secret_key,
+                  status
+                });
+                this.appendNotification("- Video is ready to play!", videoUrl);
               }
             } else {
               if (status === 'partial_completed') {
