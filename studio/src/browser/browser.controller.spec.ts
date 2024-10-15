@@ -32,13 +32,13 @@ describe('BrowserController', () => {
       fixture.waitForSelector,
       fixture.fileUrl,
     ]),
-  )('should return success status after uploading file', async (  url, urlPath, waitForSelector, fileUrl) => {
-    const result = await controller.uploadFile(
+  )('should return success status after uploading file', async (url, urlPath, waitForSelector, fileUrl) => {
+    const result = await controller.uploadFile({
       url,
       urlPath,
       waitForSelector,
-      fileUrl,
-    );
+      file: fileUrl,
+    });
 
     expect(result).toEqual({
       status: 'success',
@@ -54,12 +54,12 @@ describe('BrowserController', () => {
 
     (browserService.uploadFile as jest.Mock).mockResolvedValue(uploadUrl);
 
-    const result = await controller.uploadFile(
+    const result = await controller.uploadFile({
       url,
-      '',
+      urlPath: '/upload',
       waitForSelector,
-      fileUrl,
-    );
+      file: fileUrl,
+    });
 
     expect(result).toEqual({
       upload: uploadUrl,

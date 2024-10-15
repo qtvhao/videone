@@ -6,7 +6,7 @@ export class BrowserController {
   constructor(private readonly browserService: BrowserService) {}
 
   @Get('content')
-  async getPageContent(@Query('url') url: string): Promise<string> {
+  async getPageContent(@Query('url') url: string = ''): Promise<string> {
     return this.browserService.getPageContent(url);
   }
 

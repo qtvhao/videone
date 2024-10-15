@@ -97,8 +97,13 @@ export class BrowserService implements OnModuleDestroy {
     return screenshot;
   }
 
-  async getPageContent(url: string): Promise<string> {
-    const page = await this.gotoPage(url);
+  async getPageContent(url: string = ''): Promise<string> {
+    let page = null;
+    if (url === '') {
+      page = await this.getFirstPage();
+    }else{
+      page = await this.gotoPage(url);
+    }
     const content = await page.content();
     return content;
   }
