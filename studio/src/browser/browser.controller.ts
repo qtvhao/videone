@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body } from '@nestjs/common';
 import { BrowserService } from './browser.service';
 
 @Controller('browser')
@@ -20,9 +20,10 @@ export class BrowserController {
     this.browserService.gotoPage(url);
   }
 
-  @Get('upload')
-  async uploadFile(@Query('url') url: string, @Query('urlPath') urlPath: string, @Query('waitForSelector') waitForSelector: string, @Query('file') fileUrl: string): Promise<{ upload: string, status: string }> {
-    let uploadUrl = await this.browserService.uploadFile(url, urlPath, waitForSelector, fileUrl);
+  @Post('upload')
+  async uploadFile(@Body() body: { url: string, urlPath: string, waitForSelector: string, file: string }): Promise<{ upload: string, status: string }> {
+    const { url, urlPath, waitForSelector, file } = body;
+    let uploadUrl = await this.browserService.uploadFile(url, urlPath, waitForSelector, file);
 
     return {
       upload: uploadUrl,

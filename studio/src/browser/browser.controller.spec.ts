@@ -92,27 +92,20 @@ describe('BrowserController', () => {
   });
 
   // Additional tests using fixtures
-  it('should call uploadFile with different fixture parameters', async () => {
-    for (const fixture of uploadFileFixtures) {
-      const { url, urlPath, waitForSelector, fileUrl, expectedUploadUrl } =
-        fixture;
-
-      (browserService.uploadFile as jest.Mock).mockResolvedValue(
-        expectedUploadUrl,
-      );
+  it.each(uploadFileFixtures.map((fixture) => {
+    const { url, urlPath, waitForSelector, fileUrl } = fixture;
+    return [url, urlPath, waitForSelector, fileUrl];
+  }))( 'should return success status after uploadFile', async (url, urlPath, waitForSelector, fileUrl) => {
+      const expectedUploadUrl = 'File uploaded';
 
       const result = await controller.uploadFile(
-        url,
-        urlPath,
-        waitForSelector,
-        fileUrl,
+        { url, urlPath, waitForSelector, file: fileUrl },
       );
 
       expect(result).toEqual({
         upload: expectedUploadUrl,
         status: 'success',
       });
-    }
   });
 
   it('should call getPageContent with different fixture parameters', async () => {
