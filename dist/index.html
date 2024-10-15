@@ -27,12 +27,22 @@
       background-color: #f0f0f0;
     }
 
-    td {
+    .ellipsis {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 280px;
       display: table-cell;
+    }
+    button {
+      cursor: pointer;
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      margin-top: 0.5rem;
+      margin-right: 0.5rem;
     }
   </style>
   <style>
@@ -85,7 +95,7 @@
       </small>
       <input type="text" id="secret_key" v-model="secret_key" placeholder="Liên hệ admin để lấy Secret Key" required>
 
-      <button type="submit"
+      <button type="submit" class="btn-submit"
         :class="{ 'btn-disabled': (socketIsConnected === false || !secret_key || secret_key === 'please-contact-admin-to-get-one') }">
         Submit
       </button>
@@ -113,6 +123,9 @@
             <button @click="deleteVideo(video.id)" style="background-color: red; color: white;">
               Delete
             </button>
+            <button @click="uploadVideo(video.id)" style="background-color: green; color: white;">
+              Upload
+            </button>
           </td>
         </tr>
       </table>
@@ -129,7 +142,7 @@
         </th>
       </tr>
       <tr v-for="videoDetail in videoDetails" :key="videoDetail.prompt">
-        <td>{{ videoDetail.prompt }}</td>
+        <td class="ellipsis">{{ videoDetail.prompt }}</td>
         <td v-for="step in steps" :key="step">
           <!-- {{ videoDetail[step] }} -->
           <div v-for="item in videoDetail[step]" :key="item.id">
@@ -326,6 +339,9 @@
           };
         },
 
+        async uploadVideo(id) {
+          
+        },
         async deleteVideo(id) {
           this.deleteItem(id);
           this.videosInDatabase.forEach((video, index) => {
