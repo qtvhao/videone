@@ -26,6 +26,7 @@
     .suggested-prompt:hover {
       background-color: #f0f0f0;
     }
+
     td {
       white-space: nowrap;
       overflow: hidden;
@@ -89,6 +90,33 @@
         Submit
       </button>
     </form>
+    <div>
+      {{videosInDatabase}}
+      <table v-show="videosInDatabase.length > 0">
+        <tr>
+          <th>Job ID</th>
+          <th>Video URL</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        <tr v-for="video in videosInDatabase" :key="video.id">
+          <td>{{ video.id }}</td>
+          <td>
+            <a :href="baseUrl + video.video_url" target="_blank">
+              {{ video.video_url }}
+            </a>
+          </td>
+          <td>
+            {{ video.status }}
+          </td>
+          <td>
+            <button @click="deleteVideo(video.id)" style="background-color: red; color: white;">
+              Delete
+            </button>
+          </td>
+        </tr>
+      </table>
+    </div>
     <table v-show="videoDetails.length > 0">
       <tr>
         <th>Prompt</th>
@@ -166,6 +194,7 @@
     const app = Vue.createApp({
       data() {
         return {
+          videosInDatabase: [],
           suggestedPrompts: [
             'Xây dựng bài giảng về sales pipeline. Đối tượng là người đọc không chuyên về lĩnh vực kinh doanh và tiếp thị',
             'Hãy xây dựng bài giảng về Blockchain. Đối tượng là người đọc không chuyên về lĩnh vực công nghệ',
@@ -214,7 +243,130 @@
           ] // Predefined visual prompts
         };
       },
+      created() {
+        this.loadVideosFromIndexedDB();
+      },
       methods: {
+        loadVideosFromIndexedDB() {
+          this.listItems().then((videos) => {
+            videos.forEach((video) => {
+              if (this.videosInDatabase.filter((item) => item.id === video.id).length === 0) {
+                this.videosInDatabase.push(video);
+              }
+            });
+          });
+        },
+        // Open Database
+        openDatabase() {
+          return new Promise((resolve, reject) => {
+            const request = indexedDB.open('videoDatabase', 1);
+
+            request.onupgradeneeded = (event) => {
+              const db = event.target.result;
+              if (!db.objectStoreNames.contains('videos')) {
+                db.createObjectStore('videos', { keyPath: 'id', autoIncrement: true });
+              }
+            };
+
+            request.onsuccess = (event) => {
+              resolve(event.target.result);
+            };
+
+            request.onerror = (event) => {
+              reject(event.target.error);
+            };
+          });
+        },
+
+        // Create Item
+        async createItem(video) {
+          const db = await this.openDatabase();
+          const transaction = db.transaction(['videos'], 'readwrite');
+          const store = transaction.objectStore('videos');
+          store.add(video);
+          transaction.oncomplete = () => {
+            console.log('Video added successfully');
+          };
+          transaction.onerror = (event) => {
+            console.error('Error adding video:', event.target.error);
+          };
+        },
+
+        // Read Item
+        async readItem(id) {
+          const db = await this.openDatabase();
+          return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['videos'], 'readonly');
+            const store = transaction.objectStore('videos');
+            const request = store.get(id);
+
+            request.onsuccess = (event) => {
+              resolve(event.target.result);
+            };
+
+            request.onerror = (event) => {
+              reject(event.target.error);
+            };
+          });
+        },
+
+        // Edit Item
+        async editItem(id, updatedVideo) {
+          const db = await this.openDatabase();
+          const transaction = db.transaction(['videos'], 'readwrite');
+          const store = transaction.objectStore('videos');
+          const request = store.put({ ...updatedVideo, id });
+
+          transaction.oncomplete = () => {
+            console.log('Video updated successfully');
+          };
+
+          transaction.onerror = (event) => {
+            console.error('Error updating video:', event.target.error);
+          };
+        },
+
+        async deleteVideo(id) {
+          this.deleteItem(id);
+          this.videosInDatabase.forEach((video, index) => {
+            if (video.id === id) {
+              this.videosInDatabase.splice(index, 1);
+            }
+          });
+        },
+        // Delete Item
+        async deleteItem(id) {
+          const db = await this.openDatabase();
+          const transaction = db.transaction(['videos'], 'readwrite');
+          const store = transaction.objectStore('videos');
+          store.delete(id);
+
+          transaction.oncomplete = () => {
+            console.log('Video deleted successfully');
+          };
+
+          transaction.onerror = (event) => {
+            console.error('Error deleting video:', event.target.error);
+          };
+        },
+
+        // List Items
+        async listItems() {
+          const db = await this.openDatabase();
+          return new Promise((resolve, reject) => {
+            const transaction = db.transaction(['videos'], 'readonly');
+            const store = transaction.objectStore('videos');
+            const request = store.getAll();
+
+            request.onsuccess = (event) => {
+              resolve(event.target.result);
+            };
+
+            request.onerror = (event) => {
+              reject(event.target.error);
+            };
+          });
+        },
         submitCustomPrompt(suggestedPrompt) {
           this.customPrompt = suggestedPrompt;
           this.submitForm();
@@ -356,6 +508,10 @@
             }
           }
         },
+        addVideoToIndexedDB(video) {
+          this.createItem(video);
+          this.loadVideosFromIndexedDB();
+        },
         setupWebSocket() {
           this.socket = io(this.baseUrl);
 
@@ -370,6 +526,7 @@
             this.appendNotification("Subscription Error: " + data.message);
           });
 
+          let ct = this;
           this.socket.on('job_complete', (data) => {
             let {
               prompt: prompt,
@@ -388,6 +545,18 @@
               this.appendNotification("- Duration: " + duration);
               this.appendNotification("- Resolution: " + resolution);
               this.appendNotification("- Format: " + format);
+
+              // Add video data to IndexedDB
+              ct.addVideoToIndexedDB({
+                job_id,
+                video_url,
+                thumbnail_url,
+                duration,
+                resolution,
+                format,
+                secret_key,
+                status
+              });
 
               if (video_url) {
                 this.appendNotification("- Video is ready to play!", baseUrl + video_url.replace(/^\/+/, ''));

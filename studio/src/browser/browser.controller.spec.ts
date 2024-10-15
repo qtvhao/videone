@@ -96,7 +96,6 @@ describe('BrowserController', () => {
     const { url, urlPath, waitForSelector, fileUrl } = fixture;
     return [url, urlPath, waitForSelector, fileUrl];
   }))( 'should return success status after uploadFile', async (url, urlPath, waitForSelector, fileUrl) => {
-    const expectedUploadUrl = 'File uploaded';
     const result = await controller.uploadFile({
       url,
       urlPath,
