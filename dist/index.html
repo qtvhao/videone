@@ -102,7 +102,7 @@
       </button>
     </form>
     <div>
-      {{videosInDatabase}}
+      <!-- {{videosInDatabase}} -->
       <table v-show="videosInDatabase.length > 0">
         <tr>
           <th>Job ID</th>
@@ -377,10 +377,10 @@
           console.log('Uploading video:', video);
           let video_url = video.video_url;
           const result = await controller.uploadFile({
-            url,
-            urlPath,
-            waitForSelector,
-            file: fileUrl,
+            url: 'https://studio.youtube.com/',
+            urlPath: '/videos/upload?d=ud',
+            waitForSelector: 'input[name="Filedata"]',
+            file: video_url,
           });
 
           console.log('Result:', result);
