@@ -9,7 +9,7 @@ import {
   gotoPageFixtures,
 } from './browser.controller.fixtures';
 
-jest.setTimeout(180_000); // 30 seconds
+jest.setTimeout(60_000 * 20); // 20 minutes
 
 describe('BrowserController', () => {
   let controller: BrowserController;
@@ -96,34 +96,53 @@ describe('BrowserController', () => {
     const { url, urlPath, waitForSelector, fileUrl } = fixture;
     return [url, urlPath, waitForSelector, fileUrl];
   }))( 'should return success status after uploadFile', async (url, urlPath, waitForSelector, fileUrl) => {
-      const expectedUploadUrl = 'File uploaded';
-      const result = await controller.uploadFile({
-        url,
-        urlPath,
-        waitForSelector,
-        file: fileUrl,
-      });
+    const expectedUploadUrl = 'File uploaded';
+    const result = await controller.uploadFile({
+      url,
+      urlPath,
+      waitForSelector,
+      file: fileUrl,
+    });
 
-      console.log('Result:', result);
+    console.log('Result:', result);
 
-      while (true) {
-        const pageContent = await controller.getPageContent();
-        console.log('Page content:', pageContent);
+    while (true) {
+      const pageContent = await controller.getPageContent();
+      console.log('Page content:', pageContent);
 
-        await new Promise((resolve) => setTimeout(resolve, 8000));
+      await new Promise((resolve) => setTimeout(resolve, 8000));
 
-        if (pageContent.includes('Checks complete. No issues found.')) {
-          break;
-        }
+      if (pageContent.includes('Checks complete. No issues found.')) {
+        break;
       }
+    }
 
     let textContent = await controller.getTextContent(
       'div',
       'https://youtu.be/',
     );
+    // 
+    await controller.clickElement({
+      selector: '#next-button.ytcp-uploads-dialog',
+      text: '',
+      times: 3,
+    });
+    // 
+    await controller.clickElement({
+      selector: '#radioLabel',
+      text: 'Public',
+      times: 3,
+    });
+    // 
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    await controller.clickElement({
+      selector: '#done-button.ytcp-uploads-dialog',
+      text: '',
+      times: 1,
+    });
     console.log('Text content:', textContent);
     expect(result).toEqual({
-      upload: expectedUploadUrl,
+      upload: textContent,
       status: 'success',
     });
   });

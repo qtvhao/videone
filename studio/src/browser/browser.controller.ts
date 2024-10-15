@@ -10,6 +10,12 @@ export class BrowserController {
     return this.browserService.getPageContent(url);
   }
 
+  @Post('clickElement')
+  async clickElement(@Body() body: { selector: string, text: string, times: number }): Promise<void> {
+    const { selector, text, times } = body;
+    return this.browserService.clickElement(selector, text, times);
+  }
+
   @Get('getTextContent')
   async getTextContent(@Query('selector') selector: string, @Query('find') find: string): Promise<string> {
     return this.browserService.getTextContent(selector, find);

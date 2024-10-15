@@ -96,11 +96,32 @@ export class BrowserService implements OnModuleDestroy {
     const screenshot = await page.screenshot();
     return screenshot;
   }
+  async clickElement(selector: string, text: string, times: number): Promise<void> {
+    const page = await this.getFirstPage();
+    await page.waitForSelector(selector);
+    for (let i = 0; i < times; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 2_000));
+      if (text === '') {
+        await page.click(selector);
+      }else{
+        let elements = await page.$$(selector);
+        for (let element of elements) {
+          const textContent = await page.evaluate(element => element.textContent, element);
+          console.log('Element text content:', textContent);
+          if (textContent === text) {
+            await element.click();
+            break;
+          }
+        }
+      }
+    }
+  }
 
   async getTextContent(selector: string, find: string): Promise<string> {
     const page = await this.getFirstPage();
     let elements = await page.$$(selector);
-    for (let element of elements) {
+    for (let i = elements.length - 1; i >= 0; i--) {
+      const element = elements[i];
       const textContent = await page.evaluate(element => element.textContent, element);
       if (textContent.indexOf(find) !== -1) {
         return textContent;
