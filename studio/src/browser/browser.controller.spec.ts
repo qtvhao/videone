@@ -22,8 +22,8 @@ describe('BrowserController', () => {
   });
 
   it('should call uploadFile with correct parameters', async () => {
-    const url = 'http://example.com';
-    const waitForSelector = '#selector';
+    const url = 'https://studio.youtube.com/';
+    const waitForSelector = 'body';
     const fileUrl = 'http://example.com/file.txt';
 
     const result = await controller.uploadFile(url, waitForSelector, fileUrl);
