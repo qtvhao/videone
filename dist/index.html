@@ -140,13 +140,13 @@
               {{ video.platform_url }}
             </a>
           </td>
-          <td>
+          <td class="ellipsis" :title="video.description">
             {{ video.description }}
           </td>
-          <td>
+          <td class="ellipsis" :title="video.hashtags">
             {{ video.hashtags }}
           </td>
-          <td>
+          <td class="ellipsis" :title="video.title">
             {{ video.title }}
           </td>
           <td class="actions">
