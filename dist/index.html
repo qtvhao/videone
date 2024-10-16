@@ -230,31 +230,39 @@
       },
       async uploadFile({ url, urlPath, waitForSelector, file }) {
         await this.pingBackend();
-        return await axios.post('/browser/upload', {
+        let uploaded = await axios.post('/browser/upload', {
           url,
           urlPath,
           waitForSelector,
           file,
         });
+
+        return uploaded.data;
       },
       async clickElement({ selector, text, times }) {
         await this.pingBackend();
-        return await axios.post('/browser/clickElement', {
+        let clicked = await axios.post('/browser/clickElement', {
           selector,
           text,
           times,
         });
+
+        return clicked.data;
       },
       async getTextContent(selector, url) {
         await this.pingBackend();
-        return await axios.post('/browser/getTextContent', {
+        let textContent = await axios.post('/browser/getTextContent', {
           selector,
           url,
         });
+        
+        return textContent.data;
       },
       async getPageContent() {
         await this.pingBackend();
-        return await axios.get('/browser/content');
+        let pageContent = await axios.get('/browser/content');
+
+        return pageContent.data;
       },
     };
 

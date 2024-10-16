@@ -1,9 +1,7 @@
 import { Controller, Get, Post, Query, Body, UseInterceptors } from '@nestjs/common';
 import { BrowserService } from './browser.service';
-import { CorsInterceptor } from '../interceptors/cors.interceptor';
 
 @Controller('browser')
-@UseInterceptors(CorsInterceptor)
 export class BrowserController {
   constructor(private readonly browserService: BrowserService) {}
 

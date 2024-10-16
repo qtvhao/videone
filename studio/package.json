@@ -4,6 +4,9 @@
   "description": "",
   "author": "",
   "private": true,
+  "config": {
+    "puppeteer_skip_chromium_download": true
+  },
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
@@ -24,6 +27,7 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "cloudflared": "^0.5.3",
+    "puppeteer": "^23.5.3",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"
   },
