@@ -696,7 +696,7 @@
             this.appendNotification("- Status: " + status);
             if (status === 'completed') {
               console.log(data.message);
-              let matcher = /Original prompt is: (.+). Description: (.+). Hashtags: (.+)$/;
+              let matcher = /Original prompt is: (.+). Description: (.+). Hashtags: (.+). Title is: (.+)$/;
               let match = matcher.exec(data.message.message);
               console.log(match);
               let [,, description, hashtags] = match;
