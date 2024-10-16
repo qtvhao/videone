@@ -398,6 +398,11 @@
           transaction.onerror = (event) => {
             console.error('Error updating video:', event.target.error);
           };
+          this.videosInDatabase.forEach((video, index) => {
+            if (video.id === id) {
+              this.videosInDatabase.splice(index, 1, updatedVideo);
+            }
+          });
         },
 
         async uploadVideo(id) {
@@ -448,6 +453,15 @@
             times: 1,
           });
           console.log('Text content:', textContent);
+
+          // Update video status and video URL
+          video.status = 'uploaded';
+          let trimmedTextContent = textContent.replace(/[\n\r]+/g, '').trim();
+          let platformUrl = trimmedTextContent;
+          video.platform_url = platformUrl;
+
+          this.editItem(id, video);
+          return textContent;
         },
         async deleteVideo(id) {
           this.deleteItem(id);
