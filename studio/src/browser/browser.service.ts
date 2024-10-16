@@ -14,7 +14,7 @@ export class BrowserService implements OnModuleDestroy {
     await this.waitForChrome();
     if (!this.browser) {
       this.browser = await puppeteer.connect({
-        browserURL: 'http://localhost:9222'
+        browserURL: 'http://localhost:9222',
       });
     }
   }
@@ -50,7 +50,7 @@ export class BrowserService implements OnModuleDestroy {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async getFirstPage(): Promise<puppeteer.Page> {
@@ -62,64 +62,108 @@ export class BrowserService implements OnModuleDestroy {
     }
     return pages[0];
   }
+  async clickButtonSave(immediately_break = false) {
+    const page = await this.getFirstPage();
+    let saveButton;
+    while (typeof saveButton === 'undefined') {
+        await new Promise(resolve => setTimeout(resolve, 10_000));
+        console.log('Waiting for save button');
+        let filledButtons = await page.$$('ytcp-button[type=filled]');
+        for (let button of filledButtons) {
+            let text = await page.evaluate((el: HTMLElement) =>               el.innerText, button);
+            // if (text.includes('SAVE')) {
+            if (text && text.toUpperCase() === 'SAVE') {
+                saveButton = button;
+                break;
+            }
+        }
+        if (immediately_break) {
+            break;
+        }
+    }
+    await saveButton.click();
+}
 
   async typeOnFocused(selector: string, matcher: string, text: string) {
     const page = await this.getFirstPage();
     for (let i = 0; i < 200; i++) {
-        await page.keyboard.press('Tab');
-        let $el = await page.$(selector);
-        if ($el) {
-            console.log('Focused:', $el);
-            let borderColor = await page.evaluate(el => {
-                return getComputedStyle(el).borderColor;
-            }, $el);
-            let innerText = await page.evaluate((el: HTMLElement) => {
-                return el.innerText;
-            }, $el);
-            let inputsText = await page.evaluate(el => {
-                let inputs = Array.from(el.querySelectorAll('input'));
+      await page.keyboard.press('Tab');
+      let $el = await page.$(selector);
+      if ($el) {
+        console.log('Focused:', $el);
+        let borderColor = await page.evaluate((el) => {
+          return getComputedStyle(el).borderColor;
+        }, $el);
+        let innerText = await page.evaluate((el: HTMLElement) => {
+          return el.innerText;
+        }, $el);
+        let inputsText = await page.evaluate((el) => {
+          let inputs = Array.from(el.querySelectorAll('input'));
 
-                return inputs.map(input => input.placeholder);
-            }, $el);
-            console.log('Inputs text:', inputsText);
-            innerText += " " + inputsText.join(' ');
-            if (innerText.includes(matcher)) {
-              console.log('Typing:', text);
-                await page.keyboard.down('Control');
-                await page.keyboard.press('KeyA');
-                await page.keyboard.up('Control');
-                await page.keyboard.press('Backspace');
-                await page.keyboard.type(text);
-                throw new Error('Stop');
-                break;
-            } else {
-                console.log('Inner text:', innerText);
-                console.log('Border color:', borderColor);
-            }
+          return inputs.map((input) => input.placeholder);
+        }, $el);
+        console.log('Inputs text:', inputsText);
+        innerText += ' ' + inputsText.join(' ');
+        if (innerText.includes(matcher)) {
+          console.log('Typing:', text);
+          // await page.keyboard.down('Control');
+          // await page.keyboard.press('KeyA');
+          // await page.keyboard.up('Control');
+          // await page.keyboard.press('Backspace');
+          for (let i = 0; i < 100; i++) {
+            await page.keyboard.press('ArrowRight');
+            await page.keyboard.press('Backspace');
+          }
+          await page.keyboard.type(text);
+          break;
         } else {
-            // console.log('Pressing Tab:', i, 'matcher', matcher);
+          console.log('Inner text:', innerText);
+          console.log('Border color:', borderColor);
         }
+      } else {
+        // console.log('Pressing Tab:', i, 'matcher', matcher);
+      }
     }
   }
-  async updateDetails(videoUrl: string, title: string, hashtags: string, description: string): Promise<void> {
-    console.log('Updating video details:', videoUrl, title, hashtags, description);
+  async updateDetails(
+    videoUrl: string,
+    title: string,
+    hashtags: string,
+    description: string,
+  ): Promise<void> {
+    console.log(
+      'Updating video details:',
+      videoUrl,
+      title,
+      hashtags,
+      description,
+    );
     let matcher = videoUrl.match(/https:\/\/youtu\.be\/(.*)/);
     let videoId = matcher[1];
-    let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`
+    let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`;
     await this.gotoPage(studioUrl);
-    let commonSelector = 'ytcp-form-input-container[focused] #outer.ytcp-form-input-container';
-    await this.typeOnFocused(commonSelector, 'Title (required)', title)
-    // await this.typeOnFocused(commonSelector, 'Description', description)
+    let commonSelector =
+      'ytcp-form-input-container[focused] #outer.ytcp-form-input-container';
+    await this.typeOnFocused(commonSelector, 'Title (required)', title);
+    await this.typeOnFocused(commonSelector, 'Description', description)
+    await this.clickButtonSave();
     await new Promise((resolve) => setTimeout(resolve, 65_000));
   }
 
-  async uploadFile(url: string, pathname, waitForSelector: string, fileUrl: string): Promise<string> {
+  async uploadFile(
+    url: string,
+    pathname,
+    waitForSelector: string,
+    fileUrl: string,
+  ): Promise<string> {
     const page = await this.gotoPage(url);
     const pageUrl = page.url();
     console.log('Current URL:', pageUrl);
     await this.gotoPage(pageUrl + pathname);
     await page.waitForSelector(waitForSelector);
-    const input = await page.$(waitForSelector) as puppeteer.ElementHandle<HTMLInputElement>;
+    const input = (await page.$(
+      waitForSelector,
+    )) as puppeteer.ElementHandle<HTMLInputElement>;
     const file = await this.fetchFileUrlAsLocalFile(fileUrl);
     console.log('Uploading file:', file);
     await input.uploadFile(file);
@@ -146,17 +190,24 @@ export class BrowserService implements OnModuleDestroy {
     const screenshot = await page.screenshot();
     return screenshot;
   }
-  async clickElement(selector: string, text: string, times: number): Promise<void> {
+  async clickElement(
+    selector: string,
+    text: string,
+    times: number,
+  ): Promise<void> {
     const page = await this.getFirstPage();
     await page.waitForSelector(selector);
     for (let i = 0; i < times; i++) {
       await new Promise((resolve) => setTimeout(resolve, 2_000));
       if (text === '') {
         await page.click(selector);
-      }else{
+      } else {
         let elements = await page.$$(selector);
         for (let element of elements) {
-          const textContent = await page.evaluate(element => element.textContent, element);
+          const textContent = await page.evaluate(
+            (element) => element.textContent,
+            element,
+          );
           console.log('Element text content:', textContent);
           if (textContent === text) {
             await element.click();
@@ -172,7 +223,10 @@ export class BrowserService implements OnModuleDestroy {
     let elements = await page.$$(selector);
     for (let i = elements.length - 1; i >= 0; i--) {
       const element = elements[i];
-      const textContent = await page.evaluate(element => element.textContent, element);
+      const textContent = await page.evaluate(
+        (element) => element.textContent,
+        element,
+      );
       if (textContent.indexOf(find) !== -1) {
         return textContent;
       }
@@ -183,10 +237,12 @@ export class BrowserService implements OnModuleDestroy {
     let page = null;
     if (url === '') {
       page = await this.getFirstPage();
-    }else{
+    } else {
       page = await this.gotoPage(url);
     }
-    const content = await page.evaluate(() => document.documentElement.innerText);
+    const content = await page.evaluate(
+      () => document.documentElement.innerText,
+    );
     return content;
   }
 
@@ -196,10 +252,12 @@ export class BrowserService implements OnModuleDestroy {
 
     if (platform === 'darwin') {
       // MacOS
-      chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+      chromePath =
+        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
     } else if (platform === 'win32') {
       // Windows
-      chromePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+      chromePath =
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
     } else if (platform === 'linux') {
       // Linux
       chromePath = '/usr/bin/google-chrome';
@@ -207,14 +265,18 @@ export class BrowserService implements OnModuleDestroy {
       throw new Error('Unsupported platform: ' + platform);
     }
 
-    const chromeProcess = spawn(chromePath, [
-      '--remote-debugging-port=9222',
-      // '--disable-gpu',
-      // '--no-sandbox'
-    ], {
-      detached: true,
-      stdio: [ 'ignore', 'pipe', 'pipe' ]
-    });
+    const chromeProcess = spawn(
+      chromePath,
+      [
+        '--remote-debugging-port=9222',
+        // '--disable-gpu',
+        // '--no-sandbox'
+      ],
+      {
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
 
     chromeProcess.on('error', (err) => {
       // console.error('Failed to start Chrome:', err);
