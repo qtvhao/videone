@@ -206,7 +206,13 @@
     dayjs.extend(window.dayjs_plugin_duration);
     dayjs.extend(window.dayjs_plugin_relativeTime);
 
-    axios.defaults.baseURL = 'http://localhost:3000';
+    let storedBackendUrl = localStorage.getItem('backend_url');
+    if (storedBackendUrl) {
+      console.log('Stored backend URL:', storedBackendUrl);
+    } else {
+      localStorage.setItem('backend_url', 'http://localhost:3000');
+    }
+    axios.defaults.baseURL = localStorage.getItem('backend_url');
 
     const controller = {
       async pingBackend() {
@@ -218,6 +224,7 @@
           let backendUrl = window.prompt('Please enter the correct backend URL:', 'http://localhost:3000');
           if (backendUrl) {
             axios.defaults.baseURL = backendUrl;
+            localStorage.setItem('backend_url', backendUrl);
           }
         }
       },
