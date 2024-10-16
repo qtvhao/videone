@@ -252,7 +252,7 @@
       async getTextContent(selector, find) {
         await this.pingBackend();
         let textContent = await axios.get('/browser/getTextContent?selector=' + encodeURIComponent(selector) + '&find=' + encodeURIComponent(find));
-        
+
         return textContent.data;
       },
       async getPageContent() {
@@ -434,16 +434,27 @@
             'https://youtu.be/',
           );
           // 
-          await controller.clickElement({
-            selector: '#next-button.ytcp-uploads-dialog',
-            text: '',
-            times: 3,
-          });
+          while (true) {
+            await new Promise((resolve) => setTimeout(resolve, 12_000));
+            let radioLabelText = await controller.getTextContent(
+              '#radioLabel',
+              'Public',
+            );
+            console.log('Radio label text:', JSON.stringify({ radioLabelText }));
+            if (radioLabelText === 'Public') {
+              break;
+            }
+            await controller.clickElement({
+              selector: '#next-button.ytcp-uploads-dialog',
+              text: '',
+              times: 1,
+            });
+          }
           // 
           await controller.clickElement({
             selector: '#radioLabel',
             text: 'Public',
-            times: 3,
+            times: 1,
           });
           // 
           await new Promise((resolve) => setTimeout(resolve, 2_000));
