@@ -114,6 +114,15 @@
           <th>
             Platform URL
           </th>
+          <th>
+            Description
+          </th>
+          <th>
+            Hashtags
+          </th>
+          <th>
+            Title
+          </th>
           <th>Actions</th>
         </tr>
         <tr v-for="video in videosInDatabase" :key="video.id">
@@ -130,6 +139,15 @@
             <a :href="video.platform_url" target="_blank">
               {{ video.platform_url }}
             </a>
+          </td>
+          <td>
+            {{ video.description }}
+          </td>
+          <td>
+            {{ video.hashtags }}
+          </td>
+          <td>
+            {{ video.title }}
           </td>
           <td class="actions">
             <button @click="deleteVideo(video.id)" style="background-color: red; color: white;">
@@ -699,9 +717,10 @@
               let matcher = /Original prompt is: (.+). Description: (.+). Hashtags: (.+). Title is: (.+)$/;
               let match = matcher.exec(data.message.message);
               console.log(match);
-              let [,, description, hashtags] = match;
+              let [,, description, hashtags, title] = match;
               this.appendNotification("- Description: " + description);
               this.appendNotification("- Hashtags: " + hashtags);
+              this.appendNotification("- Title: " + title);
               this.appendNotification("- Prompt: " + prompt);
               this.appendNotification("- Job ID: " + job_id);
               this.appendNotification("- Video rendering job complete.");
@@ -717,6 +736,7 @@
                 ct.addVideoToIndexedDB({
                   description,
                   hashtags,
+                  title,
                   job_id,
                   video_url: videoUrl,
                   thumbnail_url,
