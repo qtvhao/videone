@@ -3,7 +3,7 @@ import * as childProcess from 'child_process';
 
 @Injectable()
 export class CloudflaredService implements OnModuleDestroy {
-  private childProcess;
+  private childProcess: childProcess.ChildProcess | null = null;
 
   async startTunnel() {
     try {
@@ -25,13 +25,38 @@ export class CloudflaredService implements OnModuleDestroy {
       // Save child process to stop it later
       this.childProcess = child;
 
+      const conn_regex = /connection[= ]([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+      const ip_regex = /ip=([0-9.]+)/;
+      const location_regex = /location=([A-Za-z0-9]+)/;
+      const index_regex = /connIndex=(\d)/;
+
+      const import_regex = {
+        conn_regex,
+        ip_regex,
+        location_regex,
+        index_regex,
+      };
       // Show the URL
       const url = new Promise((resolve) => {
+        let url: string | null = null;
         const url_regex = /\|\s+(https?:\/\/[^\s]+)/;
         let parser = (data: Buffer) => {
           const match = url_regex.exec(data.toString());
           if (match) {
-            resolve(match[1]);
+            url = match[1];
+          }
+
+          const conn_match = data.toString().match(import_regex.conn_regex);
+          const ip_match = data.toString().match(import_regex.ip_regex);
+          const location_match = data.toString().match(import_regex.location_regex);
+          const index_match = data.toString().match(import_regex.index_regex);
+          if (conn_match && ip_match && location_match && index_match) {
+            const [, id] = conn_match;
+            const [, ip] = ip_match;
+            const [, location] = location_match;
+            const [, idx] = index_match;
+            console.log('Connection:', { id, ip, location, idx });
+            resolve(url);
           }
         };
         child.stdout.on('data', parser);
