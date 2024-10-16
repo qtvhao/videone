@@ -251,7 +251,7 @@
       },
       async getTextContent(selector, find) {
         await this.pingBackend();
-        let textContent = await axios.post('/browser/getTextContent?selector=' + encodeURIComponent(selector) + '&find=' + encodeURIComponent(find));
+        let textContent = await axios.get('/browser/getTextContent?selector=' + encodeURIComponent(selector) + '&find=' + encodeURIComponent(find));
         
         return textContent.data;
       },
