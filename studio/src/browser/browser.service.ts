@@ -11,8 +11,8 @@ export class BrowserService implements OnModuleDestroy {
   private browser: puppeteer.Browser;
 
   private async initBrowser(): Promise<void> {
+    await this.waitForChrome();
     if (!this.browser) {
-      await this.waitForChrome();
       this.browser = await puppeteer.connect({
         browserURL: 'http://localhost:9222'
       });
