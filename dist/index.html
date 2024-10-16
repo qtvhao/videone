@@ -132,7 +132,7 @@
             <button @click="deleteVideo(video.id)" style="background-color: red; color: white;">
               Delete
             </button>
-            <button @click="uploadVideo(video.id)" style="background-color: green; color: white;">
+            <button @click="uploadVideo(video.id)" style="background-color: green; color: white;" v-show="video.status === 'completed'">
               Upload
             </button>
           </td>
