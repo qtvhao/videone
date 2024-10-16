@@ -230,7 +230,7 @@
       },
       async uploadFile({ url, urlPath, waitForSelector, file }) {
         await this.pingBackend();
-        return await axios.post('/upload', {
+        return await axios.post('/browser/upload', {
           url,
           urlPath,
           waitForSelector,
@@ -239,7 +239,7 @@
       },
       async clickElement({ selector, text, times }) {
         await this.pingBackend();
-        return await axios.post('/clickElement', {
+        return await axios.post('/browser/clickElement', {
           selector,
           text,
           times,
@@ -247,14 +247,14 @@
       },
       async getTextContent(selector, url) {
         await this.pingBackend();
-        return await axios.post('/getTextContent', {
+        return await axios.post('/browser/getTextContent', {
           selector,
           url,
         });
       },
       async getPageContent() {
         await this.pingBackend();
-        return await axios.get('/content');
+        return await axios.get('/browser/content');
       },
     };
 
