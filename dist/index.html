@@ -108,6 +108,9 @@
           <th>Job ID</th>
           <th>Video URL</th>
           <th>Status</th>
+          <th>
+            Platform URL
+          </th>
           <th>Actions</th>
         </tr>
         <tr v-for="video in videosInDatabase" :key="video.id">
@@ -119,6 +122,11 @@
           </td>
           <td>
             {{ video.status }}
+          </td>
+          <td class="platform-url">
+            <a :href="video.platform_url" target="_blank">
+              {{ video.platform_url }}
+            </a>
           </td>
           <td>
             <button @click="deleteVideo(video.id)" style="background-color: red; color: white;">
