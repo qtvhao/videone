@@ -249,12 +249,9 @@
 
         return clicked.data;
       },
-      async getTextContent(selector, url) {
+      async getTextContent(selector, find) {
         await this.pingBackend();
-        let textContent = await axios.post('/browser/getTextContent', {
-          selector,
-          url,
-        });
+        let textContent = await axios.post('/browser/getTextContent?selector=' + encodeURIComponent(selector) + '&find=' + encodeURIComponent(find));
         
         return textContent.data;
       },
