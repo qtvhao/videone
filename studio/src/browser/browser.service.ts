@@ -161,18 +161,21 @@ export class BrowserService implements OnModuleDestroy {
       '--remote-debugging-port=9222',
       // '--disable-gpu',
       // '--no-sandbox'
-    ]);
+    ], {
+      detached: true,
+      stdio: [ 'ignore', 'pipe', 'pipe' ]
+    });
 
     chromeProcess.on('error', (err) => {
-      console.error('Failed to start Chrome:', err);
+      // console.error('Failed to start Chrome:', err);
     });
 
     chromeProcess.stdout.on('data', (data) => {
-      console.log(`Chrome stdout: ${data}`);
+      // console.log(`Chrome stdout: ${data}`);
     });
 
     chromeProcess.stderr.on('data', (data) => {
-      console.log(`Chrome stderr: ${data}`);
+      // console.log(`Chrome stderr: ${data}`);
     });
   }
 
