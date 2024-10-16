@@ -7,6 +7,7 @@ import {
   getPageContentFixtures,
   getScreenshotFixtures,
   gotoPageFixtures,
+  updateDetailsFixtures,
 } from './browser.controller.fixtures';
 
 jest.setTimeout(60_000 * 20); // 20 minutes
@@ -89,6 +90,16 @@ describe('BrowserController', () => {
     await controller.gotoPage(url);
 
     expect(browserService.gotoPage).toHaveBeenCalledWith(url);
+  });
+  it.each(updateDetailsFixtures.map((fixture) => {
+    const { videoUrl, title, hashtags, description } = fixture;
+    return [videoUrl, title, hashtags, description];
+  }))('should return success status after updateDetails', async (videoUrl, title, hashtags, description) => {
+    const result = await controller.updateDetails({ videoUrl, title, hashtags, description });
+
+    expect(result).toEqual({
+      status: 'success',
+    });
   });
 
   // Additional tests using fixtures

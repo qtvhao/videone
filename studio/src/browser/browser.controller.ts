@@ -31,6 +31,12 @@ export class BrowserController {
     this.browserService.gotoPage(url);
   }
 
+  @Post('updateDetails')
+  async updateDetails(@Body() body: { videoUrl: string, title: string, hashtags: string, description: string }): Promise<void> {
+    const { videoUrl, title, hashtags, description } = body;
+    await this.browserService.updateDetails(videoUrl, title, hashtags, description);
+  }
+
   @Post('upload')
   async uploadFile(@Body() body: { url: string, urlPath: string, waitForSelector: string, file: string }): Promise<{ upload: string, status: string }> {
     const { url, urlPath, waitForSelector, file } = body;

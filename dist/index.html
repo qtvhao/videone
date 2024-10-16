@@ -156,6 +156,9 @@
             <button @click="uploadVideo(video.id)" style="background-color: green; color: white;" v-show="video.status === 'completed'">
               Upload
             </button>
+            <button @click="updateVideoDetails(video.id)" style="background-color: blue; color: white;" v-show="video.status === 'uploaded'">
+              Update video details
+            </button>
           </td>
         </tr>
       </table>
@@ -433,7 +436,9 @@
             }
           });
         },
-
+        async updateVideoDetails(id) {
+          
+        },
         async uploadVideo(id) {
           const video = await this.readItem(id);
           console.log('Uploading video:', video);

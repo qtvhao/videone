@@ -24,7 +24,7 @@ export class BrowserService implements OnModuleDestroy {
     const retryInterval = 1000; // 1 second
 
     if (await this.isChromeReady(url)) {
-      console.log('Chrome is already ready.');
+      // console.log('Chrome is already ready.');
       return;
     }
 
@@ -61,6 +61,56 @@ export class BrowserService implements OnModuleDestroy {
       pages = await this.browser.pages();
     }
     return pages[0];
+  }
+
+  async typeOnFocused(selector: string, matcher: string, text: string) {
+    const page = await this.getFirstPage();
+    for (let i = 0; i < 200; i++) {
+        await page.keyboard.press('Tab');
+        let $el = await page.$(selector);
+        if ($el) {
+            console.log('Focused:', $el);
+            let borderColor = await page.evaluate(el => {
+                return getComputedStyle(el).borderColor;
+            }, $el);
+            let innerText = await page.evaluate((el: HTMLElement) => {
+                return el.innerText;
+            }, $el);
+            let inputsText = await page.evaluate(el => {
+                let inputs = Array.from(el.querySelectorAll('input'));
+
+                return inputs.map(input => input.placeholder);
+            }, $el);
+            console.log('Inputs text:', inputsText);
+            innerText += " " + inputsText.join(' ');
+            if (innerText.includes(matcher)) {
+              console.log('Typing:', text);
+                await page.keyboard.down('Control');
+                await page.keyboard.press('KeyA');
+                await page.keyboard.up('Control');
+                await page.keyboard.press('Backspace');
+                await page.keyboard.type(text);
+                throw new Error('Stop');
+                break;
+            } else {
+                console.log('Inner text:', innerText);
+                console.log('Border color:', borderColor);
+            }
+        } else {
+            // console.log('Pressing Tab:', i, 'matcher', matcher);
+        }
+    }
+  }
+  async updateDetails(videoUrl: string, title: string, hashtags: string, description: string): Promise<void> {
+    console.log('Updating video details:', videoUrl, title, hashtags, description);
+    let matcher = videoUrl.match(/https:\/\/youtu\.be\/(.*)/);
+    let videoId = matcher[1];
+    let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`
+    await this.gotoPage(studioUrl);
+    let commonSelector = 'ytcp-form-input-container[focused] #outer.ytcp-form-input-container';
+    await this.typeOnFocused(commonSelector, 'Title (required)', title)
+    // await this.typeOnFocused(commonSelector, 'Description', description)
+    await new Promise((resolve) => setTimeout(resolve, 65_000));
   }
 
   async uploadFile(url: string, pathname, waitForSelector: string, fileUrl: string): Promise<string> {
