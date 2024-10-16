@@ -45,6 +45,9 @@
       margin-top: 0.5rem;
       margin-right: 0.5rem;
     }
+    td.actions {
+      text-align: left;
+    }
   </style>
   <style>
     .link-disabled {
@@ -128,7 +131,7 @@
               {{ video.platform_url }}
             </a>
           </td>
-          <td>
+          <td class="actions">
             <button @click="deleteVideo(video.id)" style="background-color: red; color: white;">
               Delete
             </button>
