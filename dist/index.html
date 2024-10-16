@@ -696,6 +696,12 @@
             this.appendNotification("- Status: " + status);
             if (status === 'completed') {
               console.log(data.message);
+              let matcher = /Original prompt is: (.+). Description: (.+). Hashtags: (.+)$/;
+              let match = matcher.exec(data.message.message);
+              console.log(match);
+              let [,, description, hashtags] = match;
+              this.appendNotification("- Description: " + description);
+              this.appendNotification("- Hashtags: " + hashtags);
               this.appendNotification("- Prompt: " + prompt);
               this.appendNotification("- Job ID: " + job_id);
               this.appendNotification("- Video rendering job complete.");
@@ -709,6 +715,8 @@
                 // Add video data to IndexedDB
                 let videoUrl = baseUrl + video_url.replace(/^\/+/, '');
                 ct.addVideoToIndexedDB({
+                  description,
+                  hashtags,
                   job_id,
                   video_url: videoUrl,
                   thumbnail_url,
