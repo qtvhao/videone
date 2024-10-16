@@ -209,7 +209,20 @@
     axios.defaults.baseURL = 'http://localhost:3000';
 
     const controller = {
+      async pingBackend() {
+        try {
+          const response = await axios.get('/ping');
+          console.log(response.data);
+        } catch (error) {
+          console.error(error);
+          let backendUrl = window.prompt('Please enter the correct backend URL:', 'http://localhost:3000');
+          if (backendUrl) {
+            axios.defaults.baseURL = backendUrl;
+          }
+        }
+      },
       async uploadFile({ url, urlPath, waitForSelector, file }) {
+        await this.pingBackend();
         return await axios.post('/upload', {
           url,
           urlPath,
@@ -218,6 +231,7 @@
         });
       },
       async clickElement({ selector, text, times }) {
+        await this.pingBackend();
         return await axios.post('/clickElement', {
           selector,
           text,
@@ -225,12 +239,14 @@
         });
       },
       async getTextContent(selector, url) {
+        await this.pingBackend();
         return await axios.post('/getTextContent', {
           selector,
           url,
         });
       },
       async getPageContent() {
+        await this.pingBackend();
         return await axios.get('/content');
       },
     };
