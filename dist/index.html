@@ -407,13 +407,22 @@
         const store = transaction.objectStore('videos');
         const request = store.put({ ...updatedVideo, id });
 
-        transaction.oncomplete = () => {
-          console.log('Video updated successfully');
-        };
+        // transaction.oncomplete = () => {
+        //   console.log('Video updated successfully');
+        // };
 
-        transaction.onerror = (event) => {
-          console.error('Error updating video:', event.target.error);
-        };
+        // transaction.onerror = (event) => {
+        //   console.error('Error updating video:', event.target.error);
+        // };
+        await new Promise((resolve, reject) => {
+          request.onsuccess = (event) => {
+            resolve(event.target.result);
+          };
+
+          request.onerror = (event) => {
+            reject(event.target.error);
+          };
+        });
       },
 
       async deleteItem(id) {
@@ -592,7 +601,7 @@
             times: 1,
           });
           video.status = 'details_updated';
-          dbService.editItem(id, video);
+          await dbService.editItem(id, video);
           this.syncVideoInDatabase(id);
         },
         syncVideoInDatabase(id) {
