@@ -102,7 +102,7 @@ export class BrowserService implements OnModuleDestroy {
 
           return inputs.map((input) => input.placeholder);
         }, $el);
-        console.log('Inputs text:', inputsText);
+        // console.log('Inputs text:', inputsText);
         innerText += ' ' + inputsText.join(' ');
         if (innerText.includes(matcher)) {
           console.log('Typing:', text);
@@ -110,7 +110,7 @@ export class BrowserService implements OnModuleDestroy {
           // await page.keyboard.press('KeyA');
           // await page.keyboard.up('Control');
           // await page.keyboard.press('Backspace');
-          for (let i = 0; i < 100; i++) {
+          for (let i = 0; i < 500; i++) {
             await page.keyboard.press('ArrowRight');
             await page.keyboard.press('Backspace');
           }
@@ -142,12 +142,20 @@ export class BrowserService implements OnModuleDestroy {
     let videoId = matcher[1];
     let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`;
     await this.gotoPage(studioUrl);
+    await new Promise((resolve) => setTimeout(resolve, 35_000));
+    let pageContent = await this.getPageContent();
+    console.log('Page content:', pageContent);
+    let matcherConfirm = 'we need to confirm it';
+    while (pageContent.includes(matcherConfirm)) {
+      await new Promise((resolve) => setTimeout(resolve, 10_000));
+      pageContent = await this.getPageContent();
+    }
     let commonSelector =
       'ytcp-form-input-container[focused] #outer.ytcp-form-input-container';
     await this.typeOnFocused(commonSelector, 'Title (required)', title);
     await this.typeOnFocused(commonSelector, 'Description', description)
+    // throw new Error('Not implemented');
     await this.clickButtonSave();
-    await new Promise((resolve) => setTimeout(resolve, 65_000));
   }
 
   async uploadFile(
