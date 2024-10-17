@@ -848,7 +848,7 @@
           }
         },
         addVideoToIndexedDB(video) {
-          this.createItem(video);
+          dbService.createItem(video);
           this.loadVideosFromIndexedDB();
         },
         setupWebSocket() {
