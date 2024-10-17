@@ -498,6 +498,14 @@
         async updateVideoDetails(id) {
           const video = await this.readItem(id);
           console.log('Updating video details:', video);
+          this.videosInDatabase.forEach((video, index) => {
+            if (video.id === id) {
+              this.videosInDatabase[index] = {
+                ...video,
+                status: 'updating_details',
+              };
+            }
+          });
           let {
             description,
             hashtags,
