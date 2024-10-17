@@ -175,6 +175,10 @@
               v-show="video.status === 'completed'">
               Upload
             </button>
+            <button class="btn-disabled" style="background-color: gray; color: white;"
+              v-show="video.status === 'uploading'">
+              Uploading
+            </button>
             <button @click="updateVideoDetails(video.id)" style="background-color: blue; color: white;"
               v-show="video.status === 'uploaded'">
               Update video details
@@ -547,6 +551,14 @@
         },
         async uploadVideo(id) {
           const video = await this.readItem(id);
+          this.videosInDatabase.forEach((video, index) => {
+            if (video.id === id) {
+              this.videosInDatabase[index] = {
+                ...video,
+                status: 'uploading',
+              };
+            }
+          });
           console.log('Uploading video:', video);
           let video_url = video.video_url;
           const result = await controller.uploadFile({
