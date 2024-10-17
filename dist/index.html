@@ -398,7 +398,7 @@
       methods: {
         async checkBackendAPIAvailable() {
           try {
-            const response = await axios.get('/ping');
+            const response = await axios.get(this.backendAPI + '/ping');
             console.log(response.data);
             this.isBackendAPIAvailable = true;
             localStorage.setItem('backend_url', this.backendAPI);
