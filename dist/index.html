@@ -542,7 +542,8 @@
             text: 'Save',
             times: 1,
           });
-          
+          video.status = 'details_updated';
+          this.editItem(id, video);
         },
         async uploadVideo(id) {
           const video = await this.readItem(id);
