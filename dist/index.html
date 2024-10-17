@@ -679,6 +679,8 @@
           dbService.editItem(id, video);
           this.syncVideoInDatabase(id);
 
+          this.updateVideoDetails(id);
+
           return textContent;
         },
         async deleteVideo(id) {
