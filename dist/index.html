@@ -667,15 +667,19 @@
               '#radioLabel',
               'Public',
             );
-            console.log('Radio label text:', JSON.stringify({ radioLabelText }));
+            console.log('Radio label text:', JSON.stringify({ radioLabelText })); 
             if (radioLabelText === 'Public') {
               break;
             }
-            await controller.clickElement({
-              selector: '#next-button.ytcp-uploads-dialog',
-              text: '',
-              times: 1,
-            });
+            try {
+              await controller.clickElement({
+                selector: '#next-button.ytcp-uploads-dialog',
+                text: 'Next',
+                times: 1,
+              });
+            } catch (error) {
+              console.error(error);
+            }
           }
           // 
           await controller.clickElement({
