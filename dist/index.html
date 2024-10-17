@@ -318,7 +318,7 @@
 
         return typed.data;
       },
-      
+
       async gotoPage({ url }) {
         await this.pingBackend();
         let page = await axios.post('/browser/goto', {
@@ -334,6 +334,106 @@
         return pageContent.data;
       },
     };
+    const dbService = {
+      openDatabase() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open('videoDatabase', 1);
+
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('videos')) {
+              db.createObjectStore('videos', { keyPath: 'id', autoIncrement: true });
+            }
+          };
+
+          request.onsuccess = (event) => {
+            resolve(event.target.result);
+          };
+
+          request.onerror = (event) => {
+            reject(event.target.error);
+          };
+        });
+      },
+
+      async createItem(video) {
+        const db = await this.openDatabase();
+        const transaction = db.transaction(['videos'], 'readwrite');
+        const store = transaction.objectStore('videos');
+        store.add(video);
+        transaction.oncomplete = () => {
+          console.log('Video added successfully');
+        };
+        transaction.onerror = (event) => {
+          console.error('Error adding video:', event.target.error);
+        };
+      },
+
+      async readItem(id) {
+        const db = await this.openDatabase();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(['videos'], 'readonly');
+          const store = transaction.objectStore('videos');
+          const request = store.get(id);
+
+          request.onsuccess = (event) => {
+            resolve(event.target.result);
+          };
+
+          request.onerror = (event) => {
+            reject(event.target.error);
+          };
+        });
+      },
+
+      async editItem(id, updatedVideo) {
+        const db = await this.openDatabase();
+        const transaction = db.transaction(['videos'], 'readwrite');
+        const store = transaction.objectStore('videos');
+        const request = store.put({ ...updatedVideo, id });
+
+        transaction.oncomplete = () => {
+          console.log('Video updated successfully');
+        };
+
+        transaction.onerror = (event) => {
+          console.error('Error updating video:', event.target.error);
+        };
+      },
+
+      async deleteItem(id) {
+        const db = await this.openDatabase();
+        const transaction = db.transaction(['videos'], 'readwrite');
+        const store = transaction.objectStore('videos');
+        store.delete(id);
+
+        transaction.oncomplete = () => {
+          console.log('Video deleted successfully');
+        };
+
+        transaction.onerror = (event) => {
+          console.error('Error deleting video:', event.target.error);
+        };
+      },
+
+      async listItems() {
+        const db = await this.openDatabase();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction(['videos'], 'readonly');
+          const store = transaction.objectStore('videos');
+          const request = store.getAll();
+
+          request.onsuccess = (event) => {
+            resolve(event.target.result);
+          };
+
+          request.onerror = (event) => {
+            reject(event.target.error);
+          };
+        });
+      }
+    };
+
 
     let submittedAt = new Date();
     let baseUrl = 'https://http-distributor-api-apis-production-80.schnworks.com/';
@@ -409,7 +509,7 @@
           }
         },
         loadVideosFromIndexedDB() {
-          this.listItems().then((videos) => {
+          dbService.listItems().then((videos) => {
             videos.forEach((video) => {
               if (this.videosInDatabase.filter((item) => item.id === video.id).length === 0) {
                 this.videosInDatabase.push(video);
@@ -417,82 +517,8 @@
             });
           });
         },
-        // Open Database
-        openDatabase() {
-          return new Promise((resolve, reject) => {
-            const request = indexedDB.open('videoDatabase', 1);
-
-            request.onupgradeneeded = (event) => {
-              const db = event.target.result;
-              if (!db.objectStoreNames.contains('videos')) {
-                db.createObjectStore('videos', { keyPath: 'id', autoIncrement: true });
-              }
-            };
-
-            request.onsuccess = (event) => {
-              resolve(event.target.result);
-            };
-
-            request.onerror = (event) => {
-              reject(event.target.error);
-            };
-          });
-        },
-
-        // Create Item
-        async createItem(video) {
-          const db = await this.openDatabase();
-          const transaction = db.transaction(['videos'], 'readwrite');
-          const store = transaction.objectStore('videos');
-          store.add(video);
-          transaction.oncomplete = () => {
-            console.log('Video added successfully');
-          };
-          transaction.onerror = (event) => {
-            console.error('Error adding video:', event.target.error);
-          };
-        },
-
-        // Read Item
-        async readItem(id) {
-          const db = await this.openDatabase();
-          return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['videos'], 'readonly');
-            const store = transaction.objectStore('videos');
-            const request = store.get(id);
-
-            request.onsuccess = (event) => {
-              resolve(event.target.result);
-            };
-
-            request.onerror = (event) => {
-              reject(event.target.error);
-            };
-          });
-        },
-
-        // Edit Item
-        async editItem(id, updatedVideo) {
-          const db = await this.openDatabase();
-          const transaction = db.transaction(['videos'], 'readwrite');
-          const store = transaction.objectStore('videos');
-          const request = store.put({ ...updatedVideo, id });
-
-          transaction.oncomplete = () => {
-            console.log('Video updated successfully');
-          };
-
-          transaction.onerror = (event) => {
-            console.error('Error updating video:', event.target.error);
-          };
-          this.videosInDatabase.forEach((video, index) => {
-            if (video.id === id) {
-              this.videosInDatabase.splice(index, 1, updatedVideo);
-            }
-          });
-        },
         async updateVideoDetails(id) {
-          const video = await this.readItem(id);
+          const video = await dbService.readItem(id);
           console.log('Updating video details:', video);
           this.videosInDatabase.forEach((video, index) => {
             if (video.id === id) {
@@ -511,7 +537,7 @@
           let matcher = videoUrl.match(/https:\/\/youtu\.be\/(.*)/);
           let videoId = matcher[1];
           let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`;
-          await controller.gotoPage({ url: studioUrl }); 
+          await controller.gotoPage({ url: studioUrl });
           await new Promise((resolve) => setTimeout(resolve, 35_000));
           let pageContent = await controller.getPageContent();
           console.log('Page content:', pageContent);
@@ -551,10 +577,10 @@
             times: 1,
           });
           video.status = 'details_updated';
-          this.editItem(id, video);
+          dbService.editItem(id, video);
         },
         async uploadVideo(id) {
-          const video = await this.readItem(id);
+          const video = await dbService.readItem(id);
           this.videosInDatabase.forEach((video, index) => {
             if (video.id === id) {
               this.videosInDatabase[index] = {
@@ -639,50 +665,18 @@
           let platformUrl = trimmedTextContent;
           video.platform_url = platformUrl;
 
-          this.editItem(id, video);
+          dbService.editItem(id, video);
           return textContent;
         },
         async deleteVideo(id) {
-          this.deleteItem(id);
+          dbService.deleteItem(id);
           this.videosInDatabase.forEach((video, index) => {
             if (video.id === id) {
               this.videosInDatabase.splice(index, 1);
             }
           });
         },
-        // Delete Item
-        async deleteItem(id) {
-          const db = await this.openDatabase();
-          const transaction = db.transaction(['videos'], 'readwrite');
-          const store = transaction.objectStore('videos');
-          store.delete(id);
 
-          transaction.oncomplete = () => {
-            console.log('Video deleted successfully');
-          };
-
-          transaction.onerror = (event) => {
-            console.error('Error deleting video:', event.target.error);
-          };
-        },
-
-        // List Items
-        async listItems() {
-          const db = await this.openDatabase();
-          return new Promise((resolve, reject) => {
-            const transaction = db.transaction(['videos'], 'readonly');
-            const store = transaction.objectStore('videos');
-            const request = store.getAll();
-
-            request.onsuccess = (event) => {
-              resolve(event.target.result);
-            };
-
-            request.onerror = (event) => {
-              reject(event.target.error);
-            };
-          });
-        },
         submitCustomPrompt(suggestedPrompt) {
           this.customPrompt = suggestedPrompt;
           this.submitForm();
