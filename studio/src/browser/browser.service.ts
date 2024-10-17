@@ -231,6 +231,7 @@ export class BrowserService implements OnModuleDestroy {
   }
 
   private spawnChrome(): void {
+    console.log('Spawning Chrome...');
     const platform = os.platform();
     let chromePath: string;
 

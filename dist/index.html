@@ -583,6 +583,18 @@
             if (pageContent.includes('Checks complete. No issues found.')) {
               break;
             }
+            let minutesLeft = await controller.getTextContent('span', 'minutes left');
+            console.log('Minutes left:', minutesLeft);
+            if (minutesLeft.includes('minutes left')) {
+              this.videosInDatabase.forEach((video, index) => {
+                if (video.id === id) {
+                  this.videosInDatabase[index] = {
+                    ...video,
+                    status: minutesLeft,
+                  };
+                }
+              });
+            }
           }
 
           let textContent = await controller.getTextContent(
