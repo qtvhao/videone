@@ -375,19 +375,15 @@
         const db = await this.openDatabase();
         const transaction = db.transaction(['videos'], 'readwrite');
         const store = transaction.objectStore('videos');
-        store.add(video);
-        // transaction.oncomplete = () => {
-        //   console.log('Video added successfully');
-        // };
-        // transaction.onerror = (event) => {
-        //   console.error('Error adding video:', event.target.error);
-        // };
-        let id = await new Promise((resolve, reject) => {
-          transaction.oncomplete = (event) => {
+        const request = store.add(video);
+        
+        const id = await new Promise((resolve, reject) => {
+          request.onsuccess = (event) => {
+            console.log('Video added to IndexedDB event:', event);
             resolve(event.target.result);
           };
 
-          transaction.onerror = (event) => {
+          request.onerror = (event) => {
             reject(event.target.error);
           };
         });
