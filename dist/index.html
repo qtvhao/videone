@@ -376,12 +376,23 @@
         const transaction = db.transaction(['videos'], 'readwrite');
         const store = transaction.objectStore('videos');
         store.add(video);
-        transaction.oncomplete = () => {
-          console.log('Video added successfully');
-        };
-        transaction.onerror = (event) => {
-          console.error('Error adding video:', event.target.error);
-        };
+        // transaction.oncomplete = () => {
+        //   console.log('Video added successfully');
+        // };
+        // transaction.onerror = (event) => {
+        //   console.error('Error adding video:', event.target.error);
+        // };
+        let id = await new Promise((resolve, reject) => {
+          transaction.oncomplete = (event) => {
+            resolve(event.target.result);
+          };
+
+          transaction.onerror = (event) => {
+            reject(event.target.error);
+          };
+        });
+
+        return id;
       },
 
       async readItem(id) {
@@ -861,8 +872,9 @@
             }
           }
         },
-        addVideoToIndexedDB(video) {
-          dbService.createItem(video);
+        async addVideoToIndexedDB(video) {
+          let id = await dbService.createItem(video);
+          console.log('Video added to IndexedDB with ID:', id);
           this.loadVideosFromIndexedDB();
         },
         setupWebSocket() {
