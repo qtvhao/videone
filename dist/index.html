@@ -106,6 +106,19 @@
       </button>
     </form>
     <div>
+      <!-- New input field for Backend_API -->
+      <label for="backend_api">
+        Nhập Backend API:
+      </label>
+      <small>
+        Backend API là bắt buộc nếu bạn muốn tự động upload và quản lý kênh Youtube.
+      </small>
+      <input type="text" id="backend_api" v-model="backendAPI" placeholder="Nhập Backend API" required>
+      <button @click="checkBackendAPIAvailable" class="btn-submit">
+        Check Backend API & Save
+      </button>
+    </div>
+    <div>
       <!-- {{videosInDatabase}} -->
       <table v-show="videosInDatabase.length > 0">
         <tr>
@@ -247,7 +260,8 @@
     } else {
       localStorage.setItem('backend_url', 'http://localhost:3000');
     }
-    axios.defaults.baseURL = localStorage.getItem('backend_url');
+    let backendURL = localStorage.getItem('backend_url');
+    axios.defaults.baseURL = backendURL;
 
     const controller = {
       async pingBackend() {
@@ -322,6 +336,8 @@
     const app = Vue.createApp({
       data() {
         return {
+          backendAPI: backendURL,
+          isBackendAPIAvailable: false,
           videosInDatabase: [],
           suggestedPrompts: [
             'Xây dựng bài giảng về sales pipeline. Đối tượng là người đọc không chuyên về lĩnh vực kinh doanh và tiếp thị',
@@ -373,8 +389,20 @@
       },
       created() {
         this.loadVideosFromIndexedDB();
+        this.checkBackendAPIAvailable();
       },
       methods: {
+        async checkBackendAPIAvailable() {
+          try {
+            const response = await axios.get('/ping');
+            console.log(response.data);
+            this.isBackendAPIAvailable = true;
+            localStorage.setItem('backend_url', this.backendAPI);
+          } catch (error) {
+            console.error(error);
+            this.isBackendAPIAvailable = false;
+          }
+        },
         loadVideosFromIndexedDB() {
           this.listItems().then((videos) => {
             videos.forEach((video) => {
