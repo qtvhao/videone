@@ -98,7 +98,7 @@ describe('BrowserController', () => {
     let matcher = videoUrl.match(/https:\/\/youtu\.be\/(.*)/);
     let videoId = matcher[1];
     let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`;
-    await controller.gotoPage(studioUrl);
+    await controller.gotoPage({ url: studioUrl }); 
     await new Promise((resolve) => setTimeout(resolve, 35_000));
     let pageContent = await controller.getPageContent();
     console.log('Page content:', pageContent);

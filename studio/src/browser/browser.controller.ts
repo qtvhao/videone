@@ -32,8 +32,9 @@ export class BrowserController {
     return this.browserService.getScreenshot(url);
   }
 
-  @Get('goto')
-  async gotoPage(@Query('url') url: string): Promise<void> {
+  @Post('goto')
+  async gotoPage(@Body() body: { url: string }): Promise<void> {
+    const { url } = body;
     this.browserService.gotoPage(url);
   }
 

@@ -290,6 +290,25 @@
 
         return textContent.data;
       },
+      async typeOnFocused({ selector, matcher, text }) {
+        await this.pingBackend();
+        let typed = await axios.post('/browser/typeOnFocused', {
+          selector,
+          matcher,
+          text,
+        });
+
+        return typed.data;
+      },
+      
+      async gotoPage({ url }) {
+        await this.pingBackend();
+        let page = await axios.post('/browser/goto', {
+          url,
+        });
+
+        return page.data;
+      },
       async getPageContent() {
         await this.pingBackend();
         let pageContent = await axios.get('/browser/content');
@@ -451,7 +470,7 @@
           let matcher = videoUrl.match(/https:\/\/youtu\.be\/(.*)/);
           let videoId = matcher[1];
           let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`;
-          await controller.gotoPage(studioUrl);
+          await controller.gotoPage({ url: studioUrl }); 
           await new Promise((resolve) => setTimeout(resolve, 35_000));
           let pageContent = await controller.getPageContent();
           console.log('Page content:', pageContent);
@@ -485,7 +504,6 @@
             text: hashtags + ',',
           });
 
-          // await controller.clickButtonSave();
           await controller.clickElement({
             selector: 'ytcp-button[type=filled]',
             text: 'Save',
