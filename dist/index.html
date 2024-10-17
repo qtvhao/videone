@@ -105,7 +105,7 @@
         Submit
       </button>
     </form>
-    <div v-show="!isBackendAPIAvailable" style="background: white; max-width: 500px; padding: 1rem; border-radius: 0.25rem;">
+    <form v-show="!isBackendAPIAvailable">
       <!-- New input field for Backend_API -->
       <label for="backend_api">
         Nhập Backend API:
@@ -118,7 +118,7 @@
       <button @click="checkBackendAPIAvailable" class="btn-submit">
         Check Backend API & Save
       </button>
-    </div>
+    </form>
     <div v-show="isBackendAPIAvailable" style="color: green;">
       Backend API is available and ready to use.
     </div>
