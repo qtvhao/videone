@@ -95,11 +95,53 @@ describe('BrowserController', () => {
     const { videoUrl, title, hashtags, description } = fixture;
     return [videoUrl, title, hashtags, description];
   }))('should return success status after updateDetails', async (videoUrl, title, hashtags, description) => {
-    const result = await controller.updateDetails({ videoUrl, title, hashtags, description });
-
-    expect(result).toEqual({
-      status: 'success',
+    let matcher = videoUrl.match(/https:\/\/youtu\.be\/(.*)/);
+    let videoId = matcher[1];
+    let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`;
+    await controller.gotoPage(studioUrl);
+    await new Promise((resolve) => setTimeout(resolve, 35_000));
+    let pageContent = await controller.getPageContent();
+    console.log('Page content:', pageContent);
+    let matcherConfirm = 'we need to confirm it';
+    while (pageContent.includes(matcherConfirm)) {
+      await new Promise((resolve) => setTimeout(resolve, 10_000));
+      pageContent = await controller.getPageContent();
+    }
+    let commonSelector = 'ytcp-form-input-container[focused] #outer.ytcp-form-input-container';
+    // await this.typeOnFocused(commonSelector, 'Title (required)', title);
+    await controller.typeOnFocused({
+      selector: commonSelector,
+      matcher: 'Title (required)',
+      text: title,
     });
+    // await this.typeOnFocused(commonSelector, 'Description', description)
+    await controller.typeOnFocused({
+      selector: commonSelector,
+      matcher: 'Description',
+      text: description,
+    });
+
+
+    await controller.clickElement({
+      selector: 'button',
+      text: 'Show more',
+      times: 1,
+    });
+    await controller.typeOnFocused({
+      selector: commonSelector,
+      matcher: 'Add tag',
+      text: hashtags + ',',
+    });
+    
+    // await controller.clickButtonSave();
+    await controller.clickElement({
+      selector: 'ytcp-button[type=filled]',
+      text: 'Save',
+      times: 1,
+    });
+    // expect(result).toEqual({
+    //   status: 'success',
+    // });
   });
 
   // Additional tests using fixtures

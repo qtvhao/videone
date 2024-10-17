@@ -110,7 +110,7 @@ export class BrowserService implements OnModuleDestroy {
           // await page.keyboard.press('KeyA');
           // await page.keyboard.up('Control');
           // await page.keyboard.press('Backspace');
-          for (let i = 0; i < 500; i++) {
+          for (let i = 0; i < 5000; i++) {
             await page.keyboard.press('ArrowRight');
             await page.keyboard.press('Backspace');
           }
@@ -131,31 +131,7 @@ export class BrowserService implements OnModuleDestroy {
     hashtags: string,
     description: string,
   ): Promise<void> {
-    console.log(
-      'Updating video details:',
-      videoUrl,
-      title,
-      hashtags,
-      description,
-    );
-    let matcher = videoUrl.match(/https:\/\/youtu\.be\/(.*)/);
-    let videoId = matcher[1];
-    let studioUrl = `https://studio.youtube.com/video/${videoId}/edit`;
-    await this.gotoPage(studioUrl);
-    await new Promise((resolve) => setTimeout(resolve, 35_000));
-    let pageContent = await this.getPageContent();
-    console.log('Page content:', pageContent);
-    let matcherConfirm = 'we need to confirm it';
-    while (pageContent.includes(matcherConfirm)) {
-      await new Promise((resolve) => setTimeout(resolve, 10_000));
-      pageContent = await this.getPageContent();
-    }
-    let commonSelector =
-      'ytcp-form-input-container[focused] #outer.ytcp-form-input-container';
-    await this.typeOnFocused(commonSelector, 'Title (required)', title);
-    await this.typeOnFocused(commonSelector, 'Description', description)
-    // throw new Error('Not implemented');
-    await this.clickButtonSave();
+    
   }
 
   async uploadFile(

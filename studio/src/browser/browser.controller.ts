@@ -10,6 +10,12 @@ export class BrowserController {
     return this.browserService.getPageContent(url);
   }
 
+  @Post('typeOnFocused')
+  async typeOnFocused(@Body() body: { selector: string, matcher: string, text: string}) {
+    const { selector, matcher, text } = body;
+    return this.browserService.typeOnFocused(selector, matcher, text);
+  }
+
   @Post('clickElement')
   async clickElement(@Body() body: { selector: string, text: string, times: number }): Promise<void> {
     const { selector, text, times } = body;
