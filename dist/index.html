@@ -105,15 +105,16 @@
         Submit
       </button>
     </form>
-    <div v-show="!isBackendAPIAvailable">
+    <div v-show="!isBackendAPIAvailable" style="background: white; max-width: 500px; padding: 1rem; border-radius: 0.25rem;">
       <!-- New input field for Backend_API -->
       <label for="backend_api">
         Nhập Backend API:
       </label>
-      <small>
+      <small style="color: red;">
+        Không thể kết nối với Backend API.
         Backend API là bắt buộc nếu bạn muốn tự động upload và quản lý kênh Youtube.
       </small>
-      <input type="text" id="backend_api" v-model="backendAPI" placeholder="Nhập Backend API" required>
+      <input type="text" id="backend_api" v-model="backendAPI" placeholder="Nhập Backend API" style="border: 1px solid red;" />
       <button @click="checkBackendAPIAvailable" class="btn-submit">
         Check Backend API & Save
       </button>
