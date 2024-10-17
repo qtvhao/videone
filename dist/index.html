@@ -402,6 +402,7 @@
             console.log(response.data);
             this.isBackendAPIAvailable = true;
             localStorage.setItem('backend_url', this.backendAPI);
+            axios.defaults.baseURL = this.backendAPI;
           } catch (error) {
             console.error(error);
             this.isBackendAPIAvailable = false;
