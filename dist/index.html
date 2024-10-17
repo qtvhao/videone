@@ -567,6 +567,7 @@
           console.log('Page content:', pageContent);
           let matcherConfirm = 'we need to confirm it';
           while (pageContent.includes(matcherConfirm)) {
+            window.alert("Verify it's you. To continue, we need to confirm it’s really you. This extra layer of security helps keep your account safe.");
             await new Promise((resolve) => setTimeout(resolve, 10_000));
             pageContent = await controller.getPageContent();
           }
