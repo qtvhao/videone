@@ -7,6 +7,12 @@
   <title>Video Rendering Service</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    .cell-url {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .suggested-prompts {
       list-style-type: none;
       padding: 0;
@@ -145,7 +151,7 @@
         </tr>
         <tr v-for="video in videosInDatabase" :key="video.id">
           <td>{{ video.id }}</td>
-          <td>
+          <td class="cell-url">
             <a :href="video.video_url" target="_blank">
               {{ video.video_url }}
             </a>
