@@ -543,14 +543,13 @@
             this.isBackendAPIAvailable = false;
           }
         },
-        loadVideosFromIndexedDB() {
-          dbService.listItems().then((videos) => {
-            videos.forEach((video) => {
-              if (this.videosInDatabase.filter((item) => item.id === video.id).length === 0) {
-                this.videosInDatabase.push(video);
-              }
-            });
-          });
+        async loadVideosFromIndexedDB() {
+          let videos = await dbService.listItems();
+          for (let video of videos) {
+            if (this.videosInDatabase.filter((item) => item.id === video.id).length === 0) {
+              this.videosInDatabase.push(video);
+            }
+          }
         },
         async updateVideoDetails(id) {
           const video = await dbService.readItem(id);
@@ -875,7 +874,12 @@
         async addVideoToIndexedDB(video) {
           let id = await dbService.createItem(video);
           console.log('Video added to IndexedDB with ID:', id);
-          this.loadVideosFromIndexedDB();
+          await this.loadVideosFromIndexedDB();
+
+          await new Promise((resolve) => setTimeout(resolve, 5_000));
+          await this.uploadVideo(id);
+
+          return id;
         },
         setupWebSocket() {
           this.socket = io(this.baseUrl);
