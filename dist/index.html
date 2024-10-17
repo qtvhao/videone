@@ -66,7 +66,7 @@
     </h1>
 
     <!-- Form to select visual prompt and provide a custom prompt -->
-    <form @submit.prevent="submitForm">
+    <form @submit.prevent="submitForm" class="form-box">
       <div v-show="secret_key && secret_key !== 'please-contact-admin-to-get-one'">
         <label for="prompt">
           Nhập prompt:
@@ -105,7 +105,7 @@
         Submit
       </button>
     </form>
-    <form v-show="!isBackendAPIAvailable">
+    <div v-show="!isBackendAPIAvailable" class="form-box">
       <!-- New input field for Backend_API -->
       <label for="backend_api">
         Nhập Backend API:
@@ -118,7 +118,7 @@
       <button @click="checkBackendAPIAvailable" class="btn-submit">
         Check Backend API & Save
       </button>
-    </form>
+    </div>
     <div v-show="isBackendAPIAvailable" style="color: green;">
       Backend API is available and ready to use.
     </div>
