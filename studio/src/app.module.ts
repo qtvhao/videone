@@ -3,10 +3,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BrowserModule } from './browser/browser.module';
 import { CloudflaredService } from './cloudflared/cloudflared.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     BrowserModule,
+    HttpModule,
   ],
   controllers: [AppController],
   providers: [AppService, CloudflaredService],
