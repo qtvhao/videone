@@ -139,13 +139,7 @@
             Platform URL
           </th>
           <th>
-            Description
-          </th>
-          <th>
-            Hashtags
-          </th>
-          <th>
-            Title
+            Title <br/> Description <br/> Hashtags
           </th>
           <th>Actions</th>
         </tr>
@@ -165,13 +159,15 @@
             </a>
           </td>
           <td class="ellipsis" :title="video.description">
-            {{ video.description }}
-          </td>
-          <td class="ellipsis" :title="video.hashtags">
-            {{ video.hashtags }}
-          </td>
-          <td class="ellipsis" :title="video.title">
-            {{ video.title }}
+            <div>
+              {{ video.title }}
+            </div>
+            <div>
+              {{ video.description }}
+            </div>
+            <div>
+              {{ video.hashtags }}
+            </div>
           </td>
           <td class="actions">
             <button @click="deleteVideo(video.id)" style="background-color: red; color: white;">
