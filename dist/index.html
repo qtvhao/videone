@@ -605,8 +605,8 @@
           await dbService.editItem(id, video);
           this.syncVideoInDatabase(id);
         },
-        syncVideoInDatabase(id) {
-          let updatedVideo = dbService.readItem(id);
+        async syncVideoInDatabase(id) {
+          let updatedVideo = await dbService.readItem(id);
           this.videosInDatabase.forEach((video, index) => {
             if (video.id === id) {
               this.videosInDatabase.splice(index, 1, updatedVideo);
@@ -703,8 +703,8 @@
           let platformUrl = trimmedTextContent;
           video.platform_url = platformUrl;
 
-          dbService.editItem(id, video);
-          this.syncVideoInDatabase(id);
+          await dbService.editItem(id, video);
+          await this.syncVideoInDatabase(id);
 
           await new Promise((resolve) => setTimeout(resolve, 5_000));
           await this.updateVideoDetails(id);
