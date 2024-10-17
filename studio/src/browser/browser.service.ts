@@ -24,7 +24,7 @@ export class BrowserService implements OnModuleDestroy {
     const retryInterval = 1000; // 1 second
 
     if (await this.isChromeReady(url)) {
-      // console.log('Chrome is already ready.');
+      console.log('Chrome is already ready.');
       return;
     }
 

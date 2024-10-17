@@ -278,11 +278,7 @@
           console.log(response.data);
         } catch (error) {
           console.error(error);
-          let backendUrl = window.prompt('Please enter the correct backend URL:', 'http://localhost:3000');
-          if (backendUrl) {
-            axios.defaults.baseURL = backendUrl;
-            localStorage.setItem('backend_url', backendUrl);
-          }
+          window.alert('Backend API is not available. Run the backend server and refresh the page. Run `yarn start:dev` to start the backend server.');
         }
       },
       async uploadFile({ url, urlPath, waitForSelector, file }) {

@@ -18,6 +18,6 @@ export class AppModule implements OnModuleInit {
 
   async onModuleInit() {
     // Start the tunnel when the application starts
-    await this.cloudflaredService.startTunnel();
+    // await this.cloudflaredService.startTunnel();
   }
 }
