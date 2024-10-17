@@ -273,6 +273,7 @@
     let backendURL = localStorage.getItem('backend_url');
     axios.defaults.baseURL = backendURL;
 
+    // Browser controller
     const controller = {
       async pingBackend() {
         try {
@@ -306,9 +307,14 @@
       },
       async getTextContent(selector, find) {
         await this.pingBackend();
-        let textContent = await axios.get('/browser/getTextContent?selector=' + encodeURIComponent(selector) + '&find=' + encodeURIComponent(find));
+        try {
+          let textContent = await axios.get('/browser/getTextContent?selector=' + encodeURIComponent(selector) + '&find=' + encodeURIComponent(find));
 
-        return textContent.data;
+          return textContent.data;
+        } catch (error) {
+          await new Promise((resolve) => setTimeout(resolve, 2_000));
+          return await this.getTextContent(selector, find);
+        }
       },
       async typeOnFocused({ selector, matcher, text }) {
         await this.pingBackend();
@@ -331,11 +337,18 @@
       },
       async getPageContent() {
         await this.pingBackend();
-        let pageContent = await axios.get('/browser/content');
+        try {
+          let pageContent = await axios.get('/browser/content');
 
-        return pageContent.data;
+          return pageContent.data;
+        } catch (error) {
+          await new Promise((resolve) => setTimeout(resolve, 2_000));
+          return await this.getPageContent();          
+        }
       },
     };
+
+    // IndexedDB service
     const dbService = {
       openDatabase() {
         return new Promise((resolve, reject) => {
@@ -615,7 +628,7 @@
             const pageContent = await controller.getPageContent();
             console.log('Page content:', pageContent);
 
-            await new Promise((resolve) => setTimeout(resolve, 8000));
+            await new Promise((resolve) => setTimeout(resolve, 5_000));
 
             if (pageContent.includes('Checks complete. No issues found.')) {
               break;
@@ -640,7 +653,7 @@
           );
           // 
           while (true) {
-            await new Promise((resolve) => setTimeout(resolve, 12_000));
+            await new Promise((resolve) => setTimeout(resolve, 5_000));
             let radioLabelText = await controller.getTextContent(
               '#radioLabel',
               'Public',
@@ -679,7 +692,8 @@
           dbService.editItem(id, video);
           this.syncVideoInDatabase(id);
 
-          this.updateVideoDetails(id);
+          await new Promise((resolve) => setTimeout(resolve, 5_000));
+          await this.updateVideoDetails(id);
 
           return textContent;
         },
