@@ -827,6 +827,10 @@
               let matcher = /Original prompt is: (.+). Description: (.+). Hashtags: (.+). Title is: (.+)$/;
               let match = matcher.exec(data.message.message);
               console.log(match);
+              if (!match) {
+                console.error('Invalid message:', data.message.message);
+                return;
+              }
               let [, , description, hashtags, title] = match;
               this.appendNotification("- Description: " + description);
               this.appendNotification("- Hashtags: " + hashtags);
