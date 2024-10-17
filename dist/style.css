@@ -159,3 +159,8 @@ span.visual-prompt.selected {
   background-color: #007bff;
   color: white;
 }
+.wrap {
+  max-width: 150px;
+  white-space: normal;
+  text-align: left;
+}
