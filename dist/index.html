@@ -190,8 +190,8 @@
       </table>
     </div>
     <!-- Status box for autoPilotStarted -->
-    <div v-if="autoPilotStarted" class="status-box">
-      <p>AutoPilot is running...</p>
+    <div class="status-box">
+      <p v-show="autoPilotStarted">AutoPilot is running...</p>
       <button class="btn-submit" style="background-color: red; color: white;"
         @click="stopAutoPilot"
         v-show="autoPilotStarted">
