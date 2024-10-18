@@ -61,11 +61,6 @@
       cursor: not-allowed;
       background-color: #f0f0f0;
     }
-    .status-box {
-      background-color: #f0f0f0;
-      padding: 1rem;
-      margin-top: 1rem;
-    }
   </style>
 
 </head>
@@ -75,11 +70,6 @@
     <h1>
       Video Rendering Service
     </h1>
-
-    <!-- Status box for autoPilotStarted -->
-    <div v-if="autoPilotStarted" class="status-box">
-      <p>AutoPilot is running...</p>
-    </div>
 
     <!-- Form to select visual prompt and provide a custom prompt -->
     <form @submit.prevent="submitForm" class="form-box">
@@ -199,6 +189,11 @@
         </tr>
       </table>
     </div>
+    <!-- Status box for autoPilotStarted -->
+    <div v-if="autoPilotStarted" class="status-box">
+      <p>AutoPilot is running...</p>
+    </div>
+
     <table v-show="videoDetails.length > 0">
       <tr>
         <th>Prompt</th>
@@ -643,6 +638,16 @@
             await new Promise((resolve) => setTimeout(resolve, 5_000));
           }
         },//
+        async setVideoStatus(id, status) {
+          this.videosInDatabase.forEach((video, index) => {
+            if (video.id === id) {
+              this.videosInDatabase[index] = {
+                ...video,
+                status,
+              };
+            }
+          });
+        },
         async uploadVideo(id) {
           const video = await dbService.readItem(id);
           this.videosInDatabase.forEach((video, index) => {
@@ -676,14 +681,7 @@
             let minutesLeft = await controller.getTextContent('span', 'minutes left');
             console.log('Minutes left:', minutesLeft);
             if (minutesLeft.includes('minutes left')) {
-              this.videosInDatabase.forEach((video, index) => {
-                if (video.id === id) {
-                  this.videosInDatabase[index] = {
-                    ...video,
-                    status: minutesLeft,
-                  };
-                }
-              });
+              this.setVideoStatus(id, minutesLeft);
             }
           }
 
@@ -692,6 +690,7 @@
             'https://youtu.be/',
           );
           // 
+          this.setVideoStatus(id, 'publishing');
           while (true) {
             await new Promise((resolve) => setTimeout(resolve, 5_000));
             let radioLabelText = await controller.getTextContent(
