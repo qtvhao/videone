@@ -61,6 +61,11 @@
       cursor: not-allowed;
       background-color: #f0f0f0;
     }
+    .status-box {
+      background-color: #f0f0f0;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
   </style>
 
 </head>
@@ -70,6 +75,11 @@
     <h1>
       Video Rendering Service
     </h1>
+
+    <!-- Status box for autoPilotStarted -->
+    <div v-if="autoPilotStarted" class="status-box">
+      <p>AutoPilot is running...</p>
+    </div>
 
     <!-- Form to select visual prompt and provide a custom prompt -->
     <form @submit.prevent="submitForm" class="form-box">
