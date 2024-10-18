@@ -13,6 +13,7 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
     .suggested-prompts {
       list-style-type: none;
       padding: 0;
@@ -61,6 +62,7 @@
       cursor: not-allowed;
       background-color: #f0f0f0;
     }
+
     .link-disabled:hover {
       background-color: #f0f0f0;
       color: #333;
@@ -78,15 +80,11 @@
     <!-- Form to select visual prompt and provide a custom prompt -->
     <form @submit.prevent="submitForm" class="form-box">
       <div v-show="secret_key && secret_key !== 'please-contact-admin-to-get-one'">
-        <button class="btn-link"
-        type="button"
-          @click="auto_prompt_enabled = true"
+        <button class="btn-link" type="button" @click="auto_prompt_enabled = true"
           :class="{ 'link-disabled': socketIsConnected === false || auto_prompt_enabled }">
           Auto prompt generator
         </button>
-        <button class="btn-link"
-        type="button"
-          @click="auto_prompt_enabled = false"
+        <button class="btn-link" type="button" @click="auto_prompt_enabled = false"
           :class="{ 'link-disabled': socketIsConnected === false || !auto_prompt_enabled }">
           Custom prompt
         </button>
@@ -97,7 +95,8 @@
           <small>
             Chọn một template để tạo prompt tự động.
           </small>
-          <textarea id="auto_prompt_template" v-model="customPrompt" placeholder="Nhập template cho prompt" required></textarea>
+          <textarea id="auto_prompt_template" v-model="customPrompt" placeholder="Nhập template cho prompt"
+            required></textarea>
         </div>
         <div v-show="!auto_prompt_enabled">
           <label for="prompt">
@@ -147,7 +146,8 @@
         Không thể kết nối với Backend API.
         Backend API là bắt buộc nếu bạn muốn tự động upload và quản lý kênh Youtube.
       </small>
-      <input type="text" id="backend_api" v-model="backendAPI" placeholder="Nhập Backend API" style="border: 1px solid red;" />
+      <input type="text" id="backend_api" v-model="backendAPI" placeholder="Nhập Backend API"
+        style="border: 1px solid red;" />
       <button @click="checkBackendAPIAvailable" class="btn-submit">
         Check Backend API & Save
       </button>
@@ -166,7 +166,7 @@
             Platform URL
           </th>
           <th>
-            Title <br/> Description <br/> Hashtags
+            Title <br /> Description <br /> Hashtags
           </th>
           <th>
             Actions
@@ -388,7 +388,7 @@
           return pageContent.data;
         } catch (error) {
           await new Promise((resolve) => setTimeout(resolve, 2_000));
-          return await this.getPageContent();          
+          return await this.getPageContent();
         }
       },
     };
@@ -421,7 +421,7 @@
         const transaction = db.transaction(['videos'], 'readwrite');
         const store = transaction.objectStore('videos');
         const request = store.add(video);
-        
+
         const id = await new Promise((resolve, reject) => {
           request.onsuccess = (event) => {
             console.log('Video added to IndexedDB event:', event);
@@ -666,7 +666,7 @@
               });
             } catch (error) {
               await new Promise((resolve) => setTimeout(resolve, 5_000));
-              console.error(error); 
+              console.error(error);
             }
           }
           video.status = 'details_updated';
@@ -756,7 +756,7 @@
               '#radioLabel',
               'Public',
             );
-            console.log('Radio label text:', JSON.stringify({ radioLabelText })); 
+            console.log('Radio label text:', JSON.stringify({ radioLabelText }));
             if (radioLabelText === 'Public') {
               break;
             }
