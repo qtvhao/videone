@@ -61,6 +61,10 @@
       cursor: not-allowed;
       background-color: #f0f0f0;
     }
+    .link-disabled:hover {
+      background-color: #f0f0f0;
+      color: #333;
+    }
   </style>
 
 </head>
@@ -74,27 +78,50 @@
     <!-- Form to select visual prompt and provide a custom prompt -->
     <form @submit.prevent="submitForm" class="form-box">
       <div v-show="secret_key && secret_key !== 'please-contact-admin-to-get-one'">
-        <label for="prompt">
-          Nhập prompt:
-        </label>
-        <small>
-          Cung cấp prompt tùy chỉnh mô tả nội dung bạn muốn tạo.
-        </small>
-        <textarea id="prompt" v-model="customPrompt" placeholder="Nhập prompt tùy chỉnh" required></textarea>
-        <!-- Suggested Prompts Section -->
-        <label for="suggested_prompt">
-          Suggested Prompts:
-        </label>
-        <small>
-          Hoặc chọn một trong các gợi ý sau:
-        </small>
-        <ul class="suggested-prompts">
-          <li v-for="suggestedPrompt in suggestedPrompts" :key="suggestedPrompt"
-            @click="submitCustomPrompt(suggestedPrompt)" class="suggested-prompt"
-            :class="{ 'link-disabled': socketIsConnected === false }">
-            {{ suggestedPrompt }}
-          </li>
-        </ul>
+        <button class="btn-link"
+        type="button"
+          @click="auto_prompt_enabled = true"
+          :class="{ 'link-disabled': socketIsConnected === false || auto_prompt_enabled }">
+          Auto prompt generator
+        </button>
+        <button class="btn-link"
+        type="button"
+          @click="auto_prompt_enabled = false"
+          :class="{ 'link-disabled': socketIsConnected === false || !auto_prompt_enabled }">
+          Custom prompt
+        </button>
+        <div v-show="auto_prompt_enabled">
+          <label for="auto_prompt_template">
+            Tùy chỉnh template của prompt:
+          </label>
+          <small>
+            Chọn một template để tạo prompt tự động.
+          </small>
+          <textarea id="auto_prompt_template" v-model="customPrompt" placeholder="Nhập template cho prompt" required></textarea>
+        </div>
+        <div v-show="!auto_prompt_enabled">
+          <label for="prompt">
+            Nhập prompt:
+          </label>
+          <small>
+            Cung cấp prompt tùy chỉnh mô tả nội dung bạn muốn tạo.
+          </small>
+          <textarea id="prompt" v-model="customPrompt" placeholder="Nhập prompt tùy chỉnh" required></textarea>
+          <!-- Suggested Prompts Section -->
+          <label for="suggested_prompt">
+            Suggested Prompts:
+          </label>
+          <small>
+            Hoặc chọn một trong các gợi ý sau:
+          </small>
+          <ul class="suggested-prompts">
+            <li v-for="suggestedPrompt in suggestedPrompts" :key="suggestedPrompt"
+              @click="submitCustomPrompt(suggestedPrompt)" class="suggested-prompt"
+              :class="{ 'link-disabled': socketIsConnected === false }">
+              {{ suggestedPrompt }}
+            </li>
+          </ul>
+        </div>
       </div>
       <!-- New input field for secret_key -->
       <label for="secret_key">
@@ -529,6 +556,7 @@
           baseUrl,
           secret_key: 'please-contact-admin-to-get-one', // Default secret key
           selectedVisualPrompt: 'Entrepreneurship', // Store selected visual prompt
+          auto_prompt_enabled: false,
           customPrompt: 'Hãy xây dựng bài giảng về indie hacker', // Store user input for prompt
           video_url: '', // Store the video URL
           visualPrompts: [

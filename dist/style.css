@@ -44,6 +44,7 @@ input {
   border: 1px solid #ccc;
   box-sizing: border-box;
 }
+textarea#auto_prompt_template,
 textarea#prompt {
   height: 100px;
   resize: none;
