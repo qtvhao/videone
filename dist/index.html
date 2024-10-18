@@ -143,10 +143,12 @@
           </th>
           <th>
             Actions
-            <button @click="startAutoPilot" class="btn-submit" style="background-color: green; color: white;"
-              v-show="!autoPilotStarted">
-              Start AutoPilot
-            </button>
+            <div>
+              <button @click="startAutoPilot" class="btn-submit" style="background-color: green; color: white;"
+                v-show="!autoPilotStarted">
+                Start AutoPilot
+              </button>
+            </div>
           </th>
         </tr>
         <tr v-for="video in videosInDatabase" :key="video.id">
