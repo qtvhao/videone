@@ -141,7 +141,13 @@
           <th>
             Title <br/> Description <br/> Hashtags
           </th>
-          <th>Actions</th>
+          <th>
+            Actions
+            <button @click="startAutoPilot" class="btn-submit" style="background-color: green; color: white;"
+              v-show="!autoPilotStarted">
+              Start AutoPilot
+            </button>
+          </th>
         </tr>
         <tr v-for="video in videosInDatabase" :key="video.id">
           <td>{{ video.id }}</td>
@@ -190,17 +196,13 @@
       </table>
     </div>
     <!-- Status box for autoPilotStarted -->
-    <div class="status-box">
-      <p v-show="autoPilotStarted">AutoPilot is running...</p>
-      <button class="btn-submit" style="background-color: red; color: white;"
+    <div class="status-box" v-show="autoPilotStarted">
+      <p>AutoPilot is running...</p>
+      <!-- <button class="btn-submit" style="background-color: red; color: white;"
         @click="stopAutoPilot"
         v-show="autoPilotStarted">
         Stop AutoPilot
-      </button>
-      <button @click="startAutoPilot" class="btn-submit" style="background-color: green; color: white;"
-        v-show="!autoPilotStarted">
-        Start AutoPilot
-      </button>
+      </button> -->
     </div>
 
     <table v-show="videoDetails.length > 0">
