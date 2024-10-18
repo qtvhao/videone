@@ -471,6 +471,7 @@
     const app = Vue.createApp({
       data() {
         return {
+          autoPilotStarted: false,
           backendAPI: backendURL,
           isBackendAPIAvailable: false,
           videosInDatabase: [],
@@ -619,6 +620,19 @@
             }
           });
         },
+        async startAutoPilot() {
+          if (this.autoPilotStarted) {
+            return;
+          }
+          this.autoPilotStarted = true;
+          while (true) {
+            let video = this.videosInDatabase.filter((video) => video.status === 'completed')[0];
+            if (video) {
+              await this.uploadVideo(video.id);
+            }
+            await new Promise((resolve) => setTimeout(resolve, 5_000));
+          }
+        },//
         async uploadVideo(id) {
           const video = await dbService.readItem(id);
           this.videosInDatabase.forEach((video, index) => {
@@ -873,7 +887,7 @@
           await this.loadVideosFromIndexedDB();
 
           await new Promise((resolve) => setTimeout(resolve, 5_000));
-          await this.uploadVideo(id);
+          this.startAutoPilot();
 
           return id;
         },
