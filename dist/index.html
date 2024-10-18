@@ -89,14 +89,38 @@
           Custom prompt
         </button>
         <div v-show="auto_prompt_enabled">
+          <label for="category">
+            Chọn chủ đề:
+          </label>
+          <small>
+            Auto prompt generator sẽ tạo prompt dựa trên template và chủ đề bạn chọn.
+          </small>
+<!-- 
+Autos & Vehicles
+Comedy
+Education
+Entertainment
+Film & Animation
+Gaming
+Howto & Style
+Music
+News & Politics
+Nonprofits & Activism
+People & Blogs
+Pets & Animals
+Science & Technology
+Sports
+Travel & Events
+ -->
+          <input type="text" id="category" v-model="auto_prompt_category" placeholder="Chọn chủ đề" required>
           <label for="auto_prompt_template">
             Tùy chỉnh template của prompt:
           </label>
           <small>
             Chọn một template để tạo prompt tự động.
           </small>
-          <textarea id="auto_prompt_template" v-model="customPrompt" placeholder="Nhập template cho prompt"
-            required></textarea>
+          <textarea id="auto_prompt_template" v-model="auto_prompt_template"
+            placeholder="Chọn template tùy chỉnh để tạo prompt tự động" required></textarea>
         </div>
         <div v-show="!auto_prompt_enabled">
           <label for="prompt">
@@ -556,8 +580,10 @@
           baseUrl,
           secret_key: 'please-contact-admin-to-get-one', // Default secret key
           selectedVisualPrompt: 'Entrepreneurship', // Store selected visual prompt
-          auto_prompt_enabled: false,
+          auto_prompt_enabled: true, // false,
           customPrompt: 'Hãy xây dựng bài giảng về indie hacker', // Store user input for prompt
+          auto_prompt_template: 'Hãy xây dựng bài giảng về ${name}. Đối tượng là người đọc không chuyên về lĩnh vực ${category}.',
+          auto_prompt_category: 'Technology',
           video_url: '', // Store the video URL
           visualPrompts: [
             'Entrepreneurship',
@@ -866,15 +892,23 @@
           // Send subscribe message with user-entered secret_key
           this.socket.emit('subscribe', { secret_key: this.secret_key });
 
-          const postData = {
-            // 'visual_prompt': this.selectedVisualPrompt,
-            'prompt': this.customPrompt,
-            'secret_key': this.secret_key
-          };
-
-          this.sendPostRequest(this.baseUrl.replace(/\/$/, '') + '/api/v1/render-video', postData);
-
-          this.customPrompt = '';
+          let postData;
+          if (this.auto_prompt_enabled) {
+            postData = {
+              'auto_prompt_category': this.auto_prompt_category,
+              'auto_prompt_template': this.auto_prompt_template,
+              'secret_key': this.secret_key,
+            };
+            this.sendPostRequest(this.baseUrl.replace(/\/$/, '') + '/api/v1/auto-prompt', postData);
+          } else {
+            postData = {
+              // 'visual_prompt': this.selectedVisualPrompt,
+              'prompt': this.customPrompt + '',
+              'secret_key': this.secret_key,
+            };
+            this.sendPostRequest(this.baseUrl.replace(/\/$/, '') + '/api/v1/render-video', postData);
+            this.customPrompt = '';
+          }
         },
         updateGanttChart(message) {
           let {
