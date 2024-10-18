@@ -192,6 +192,15 @@
     <!-- Status box for autoPilotStarted -->
     <div v-if="autoPilotStarted" class="status-box">
       <p>AutoPilot is running...</p>
+      <button class="btn-submit" style="background-color: red; color: white;"
+        @click="stopAutoPilot"
+        v-show="autoPilotStarted">
+        Stop AutoPilot
+      </button>
+      <button @click="startAutoPilot" class="btn-submit" style="background-color: green; color: white;"
+        v-show="!autoPilotStarted">
+        Start AutoPilot
+      </button>
     </div>
 
     <table v-show="videoDetails.length > 0">
@@ -640,12 +649,15 @@
             }
           });
         },
+        async stopAutoPilot() {
+          this.autoPilotStarted = false;
+        },
         async startAutoPilot() {
           if (this.autoPilotStarted) {
             return;
           }
           this.autoPilotStarted = true;
-          while (true) {
+          while (this.autoPilotStarted) {
             let video = this.videosInDatabase.filter((video) => video.status === 'completed')[0];
             if (video) {
               await this.uploadVideo(video.id);
