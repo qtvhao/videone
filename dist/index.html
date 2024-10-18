@@ -597,22 +597,37 @@
             text: description,
           });
 
-          await controller.clickElement({
-            selector: 'button',
-            text: 'Show more',
-            times: 1,
-          });
+          while (true) {
+            try {
+              await controller.clickElement({
+                selector: 'button',
+                text: 'Show more',
+                times: 1,
+              });
+              break;
+            } catch (error) {
+              await new Promise((resolve) => setTimeout(resolve, 5_000));
+              console.error(error);
+            }
+          }
           await controller.typeOnFocused({
             selector: commonSelector,
             matcher: 'Add tag',
             text: hashtags + ',',
           });
 
-          await controller.clickElement({
-            selector: 'ytcp-button[type=filled]',
-            text: 'Save',
-            times: 1,
-          });
+          while (true) {
+            try {
+              await controller.clickElement({
+                selector: 'ytcp-button[type=filled]',
+                text: 'Save',
+                times: 1,
+              });
+            } catch (error) {
+              await new Promise((resolve) => setTimeout(resolve, 5_000));
+              console.error(error); 
+            }
+          }
           video.status = 'details_updated';
           await dbService.editItem(id, video);
           this.syncVideoInDatabase(id);
