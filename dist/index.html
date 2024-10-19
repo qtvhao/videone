@@ -698,6 +698,7 @@ Travel & Events
               console.error(error);
             }
           }
+          await new Promise((resolve) => setTimeout(resolve, 5_000));
           video.status = 'details_updated';
           await dbService.editItem(id, video);
           this.syncVideoInDatabase(id);
